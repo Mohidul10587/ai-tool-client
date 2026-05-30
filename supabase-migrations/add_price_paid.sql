@@ -1,0 +1,3 @@
+ALTER TABLE featured_ads ADD COLUMN IF NOT EXISTS price_paid TEXT NOT NULL DEFAULT '';
+ALTER TABLE submission_service_requests ADD COLUMN IF NOT EXISTS price_paid TEXT NOT NULL DEFAULT '';
+ALTER TABLE public_review_requests ADD COLUMN IF NOT EXISTS price_paid TEXT NOT NULL DEFAULT '';

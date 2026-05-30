@@ -1,0 +1,22 @@
+-- 20 sample featured ads (pending, no user_id required)
+INSERT INTO featured_ads (url, description, status, price_paid) VALUES
+  ('https://openai.com', 'ChatGPT – AI chat assistant', 'pending', '0'),
+  ('https://midjourney.com', 'Midjourney – AI image generator', 'pending', '0'),
+  ('https://notion.so', 'Notion AI – Smart workspace', 'pending', '0'),
+  ('https://grammarly.com', 'Grammarly – AI writing helper', 'pending', '0'),
+  ('https://jasper.ai', 'Jasper – AI content writer', 'pending', '0'),
+  ('https://copy.ai', 'Copy.ai – Marketing copy fast', 'pending', '0'),
+  ('https://runway.ml', 'Runway – AI video editing', 'pending', '0'),
+  ('https://elevenlabs.io', 'ElevenLabs – AI voice cloning', 'pending', '0'),
+  ('https://perplexity.ai', 'Perplexity – AI search engine', 'pending', '0'),
+  ('https://claude.ai', 'Claude – Anthropic AI assistant', 'pending', '0'),
+  ('https://synthesia.io', 'Synthesia – AI video avatars', 'pending', '0'),
+  ('https://descript.com', 'Descript – AI podcast editor', 'pending', '0'),
+  ('https://otter.ai', 'Otter.ai – AI meeting notes', 'pending', '0'),
+  ('https://beautiful.ai', 'Beautiful.ai – AI slide maker', 'pending', '0'),
+  ('https://tome.app', 'Tome – AI storytelling tool', 'pending', '0'),
+  ('https://writesonic.com', 'Writesonic – AI blog writer', 'pending', '0'),
+  ('https://murf.ai', 'Murf – AI voiceover studio', 'pending', '0'),
+  ('https://pictory.ai', 'Pictory – AI video from text', 'pending', '0'),
+  ('https://lumen5.com', 'Lumen5 – AI social video maker', 'pending', '0'),
+  ('https://soundraw.io', 'Soundraw – AI music generator', 'pending', '0');

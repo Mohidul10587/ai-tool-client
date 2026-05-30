@@ -1,0 +1,51 @@
+-- Drop old mega menu tables if they exist
+DROP TABLE IF EXISTS mega_menu_items CASCADE;
+DROP TABLE IF EXISTS mega_menu_categories CASCADE;
+
+-- Create categories table
+CREATE TABLE IF NOT EXISTS categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  slug TEXT NOT NULL UNIQUE,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create subcategories table
+CREATE TABLE IF NOT EXISTS subcategories (
+  id SERIAL PRIMARY KEY,
+  category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(category_id, slug)
+);
+
+CREATE INDEX idx_subcategories_category ON subcategories(category_id, display_order);
+
+-- Update tool_submissions table
+ALTER TABLE tool_submissions 
+  DROP COLUMN IF EXISTS category,
+  ADD COLUMN category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+  ADD COLUMN subcategory_id INTEGER REFERENCES subcategories(id) ON DELETE SET NULL,
+  ADD COLUMN category_snapshot TEXT,
+  ADD COLUMN subcategory_snapshot TEXT;
+
+-- Insert default categories
+INSERT INTO categories (name, slug, display_order) VALUES
+  ('Text & Chat', 'text-chat', 1),
+  ('Creative', 'creative', 2),
+  ('Productivity', 'productivity', 3),
+  ('Business', 'business', 4),
+  ('Development', 'development', 5),
+  ('Industries', 'industries', 6);
+
+-- Insert default subcategories
+INSERT INTO subcategories (category_id, name, slug, display_order) VALUES
+  (1, 'Chat', 'chat', 1), (1, 'Writing', 'writing', 2), (1, 'Search', 'search', 3), (1, 'Translation', 'translation', 4), (1, 'Prompts', 'prompts', 5),
+  (2, 'Image', 'image', 1), (2, 'Video', 'video', 2), (2, 'Design', 'design', 3), (2, 'Audio', 'audio', 4), (2, 'Voice', 'voice', 5), (2, 'Music', 'music', 6), (2, '3D', '3d', 7), (2, 'Gaming', 'gaming', 8),
+  (3, 'Productivity', 'productivity', 1), (3, 'Automation', 'automation', 2), (3, 'Email', 'email', 3), (3, 'Meetings', 'meetings', 4), (3, 'Scheduling', 'scheduling', 5), (3, 'Presentations', 'presentations', 6),
+  (4, 'Marketing', 'marketing', 1), (4, 'SEO', 'seo', 2), (4, 'Sales', 'sales', 3), (4, 'Support', 'support', 4), (4, 'Finance', 'finance', 5), (4, 'HR', 'hr', 6), (4, 'Legal', 'legal', 7), (4, 'Property', 'property', 8),
+  (5, 'Code', 'code', 1), (5, 'Models', 'models', 2), (5, 'Agents', 'agents', 3), (5, 'Data', 'data', 4), (5, 'Security', 'security', 5),
+  (6, 'Education', 'education', 1), (6, 'Healthcare', 'healthcare', 2), (6, 'Research', 'research', 3);
