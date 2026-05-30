@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ExternalLink, Sparkles, Zap, Layers, Palette, Wand2, Image as ImageIcon, Send } from "lucide-react";
+import { useState, useEffect, useTransition } from "react";
+import { ExternalLink, Sparkles, Zap, Layers, Palette, Wand2, Image as ImageIcon, Send, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { addComment, deleteComment, type CommentRow } from "@/lib/comment-actions";
 
 type Ad = { id: number; url: string; description: string };
 
@@ -116,11 +117,15 @@ function VoteButton({ initialVotes = 0, size = "default" }: { initialVotes?: num
 }
 
 // ── Comment ──────────────────────────────────────────────────────────────────
-interface Comment { id: string; author: string; avatar: string; content: string; timestamp: string; upvotes: number; downvotes: number; }
-
-function CommentItem({ comment }: { comment: Comment }) {
+function CommentItem({ comment, currentUserId, toolSlug, onDelete }: {
+  comment: CommentRow;
+  currentUserId: string | null;
+  toolSlug: string;
+  onDelete: (id: string) => void;
+}) {
   const [votes, setVotes] = useState({ up: comment.upvotes, down: comment.downvotes });
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
+  const [pending, startTransition] = useTransition();
 
   const handleVote = (type: "up" | "down") => {
     const newVotes = { ...votes };
@@ -128,6 +133,19 @@ function CommentItem({ comment }: { comment: Comment }) {
     else { if (userVote) newVotes[userVote]--; newVotes[type]++; setUserVote(type); }
     setVotes(newVotes);
   };
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      await deleteComment(comment.id, toolSlug);
+      onDelete(comment.id);
+    });
+  };
+
+  const profileData = Array.isArray(comment.profiles) ? comment.profiles[0] : comment.profiles;
+  const name = profileData?.name ?? "User";
+  const avatar = profileData?.avatar_url ?? "";
+  const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  const timeAgo = new Date(comment.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   return (
     <div className="flex gap-3 py-4 border-b border-gray-100 last:border-0">
@@ -139,12 +157,17 @@ function CommentItem({ comment }: { comment: Comment }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1.5">
           <Avatar className="h-6 w-6">
-            <AvatarImage src={comment.avatar} />
-            <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">{comment.author.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
+            <AvatarImage src={avatar} />
+            <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">{initials}</AvatarFallback>
           </Avatar>
-          <span className="font-medium text-black text-sm">{comment.author}</span>
+          <span className="font-medium text-black text-sm">{name}</span>
           <span className="text-gray-400 text-xs">·</span>
-          <span className="text-gray-500 text-xs">{comment.timestamp}</span>
+          <span className="text-gray-500 text-xs">{timeAgo}</span>
+          {currentUserId === comment.user_id && (
+            <button onClick={handleDelete} disabled={pending} className="ml-auto text-gray-400 hover:text-red-500 transition-colors">
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
         <p className="text-gray-700 text-sm leading-relaxed">{comment.content}</p>
       </div>
@@ -153,13 +176,44 @@ function CommentItem({ comment }: { comment: Comment }) {
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
-export function ToolDetailsClient({ tool, featuredAds }: { tool: Tool; featuredAds: Ad[] }) {
+type CurrentUser = { id: string; name: string; avatar_url: string | null } | null;
+
+export function ToolDetailsClient({ tool, featuredAds, initialComments, currentUser }: {
+  tool: Tool;
+  featuredAds: Ad[];
+  initialComments: CommentRow[];
+  currentUser: CurrentUser;
+}) {
   const [newComment, setNewComment] = useState("");
+  const [comments, setComments] = useState<CommentRow[]>(initialComments);
+  const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
   const keyFeatures = tool.key_features ?? [];
   const useCases = tool.use_cases ?? [];
   const pricingInfo = tool.pricing_info;
   const pros = tool.pros ?? [];
   const cons = tool.cons ?? [];
+
+  const handleSubmit = () => {
+    if (!newComment.trim()) return;
+    setError("");
+    startTransition(async () => {
+      const result = await addComment(tool.id, tool.slug!, newComment);
+      if (result.error) { setError(result.error); return; }
+      // Optimistically prepend with current user info
+      const optimistic: CommentRow = {
+        id: crypto.randomUUID(),
+        user_id: currentUser!.id,
+        content: newComment.trim(),
+        created_at: new Date().toISOString(),
+        upvotes: 0,
+        downvotes: 0,
+        profiles: { name: currentUser!.name, avatar_url: currentUser!.avatar_url },
+      };
+      setComments((prev) => [optimistic, ...prev]);
+      setNewComment("");
+    });
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -293,12 +347,44 @@ export function ToolDetailsClient({ tool, featuredAds }: { tool: Tool; featuredA
             {/* Community Discussion */}
             <section className="mb-8">
               <h2 className="text-lg font-semibold text-black mb-4">Community Discussion</h2>
-              <div className="mb-4 relative">
-                <Textarea placeholder="Leave a comment..." value={newComment} onChange={(e) => setNewComment(e.target.value)} className="min-h-[80px] resize-none pr-12 text-sm" />
-                <Button size="sm" className="absolute bottom-2 right-2 bg-black hover:bg-gray-800 text-white h-8 w-8 p-0"><Send className="h-3.5 w-3.5" /></Button>
-              </div>
+              {currentUser ? (
+                <div className="mb-4 relative">
+                  <Textarea
+                    placeholder="Leave a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit(); }}
+                    className="min-h-[80px] resize-none pr-12 text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSubmit}
+                    disabled={pending || !newComment.trim()}
+                    className="absolute bottom-2 right-2 bg-black hover:bg-gray-800 text-white h-8 w-8 p-0"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                  </Button>
+                  {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 mb-4">
+                  <a href="/login" className="text-black font-medium underline">Log in</a> to leave a comment.
+                </p>
+              )}
               <div className="bg-white border border-gray-200 rounded-xl p-4">
-                <p className="text-sm text-gray-500 text-center py-4">No comments yet. Be the first!</p>
+                {comments.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">No comments yet. Be the first!</p>
+                ) : (
+                  comments.map((c) => (
+                    <CommentItem
+                      key={c.id}
+                      comment={c}
+                      currentUserId={currentUser?.id ?? null}
+                      toolSlug={tool.slug!}
+                      onDelete={(id) => setComments((prev) => prev.filter((x) => x.id !== id))}
+                    />
+                  ))
+                )}
               </div>
             </section>
 

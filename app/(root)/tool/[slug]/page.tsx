@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getApprovedFeaturedAds } from "@/lib/featured-ads-actions";
+import { getComments } from "@/lib/comment-actions";
 import { ToolDetailsClient } from "./client";
 import { notFound } from "next/navigation";
 
@@ -16,7 +17,18 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
 
   if (!tool) notFound();
 
-  const featuredAds = await getApprovedFeaturedAds();
+  const [featuredAds, comments, { data: { user } }] = await Promise.all([
+    getApprovedFeaturedAds(),
+    getComments(tool.id),
+    supabase.auth.getUser(),
+  ]);
 
-  return <ToolDetailsClient tool={tool} featuredAds={featuredAds} />;
+  return (
+    <ToolDetailsClient
+      tool={tool}
+      featuredAds={featuredAds}
+      initialComments={comments}
+      currentUser={user ? { id: user.id, name: user.user_metadata?.name ?? "User", avatar_url: user.user_metadata?.avatar_url ?? null } : null}
+    />
+  );
 }
