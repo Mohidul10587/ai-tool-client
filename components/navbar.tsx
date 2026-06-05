@@ -41,6 +41,11 @@ function MegaMenuDropdown({ isOpen, categories }: { isOpen: boolean; categories:
           </div>
         ))}
       </div>
+      <div className="mt-4 border-t border-black/10 pt-4">
+        <Link href="/categories" className="flex items-center gap-1.5 text-xs font-semibold text-black/60 transition-colors hover:text-black">
+          Browse All Categories <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
     </div>
   );
 }

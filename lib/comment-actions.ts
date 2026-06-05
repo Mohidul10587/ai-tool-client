@@ -18,7 +18,7 @@ export async function addComment(toolId: string, toolSlug: string, content: stri
   });
 
   if (error) return { error: error.message };
-  revalidatePath(`/tool/${toolSlug}`);
+  revalidatePath(`/ai/${toolSlug}`);
   return { success: true };
 }
 
@@ -34,7 +34,7 @@ export async function deleteComment(commentId: string, toolSlug: string) {
     .eq("user_id", user.id);
 
   if (error) return { error: error.message };
-  revalidatePath(`/tool/${toolSlug}`);
+  revalidatePath(`/ai/${toolSlug}`);
   return { success: true };
 }
 

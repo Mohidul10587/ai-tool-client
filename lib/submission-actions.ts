@@ -73,6 +73,18 @@ export async function updateSubmission(id: string, fields: Record<string, unknow
   return { success: true };
 }
 
+export async function deleteSubmission(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.user_metadata?.role !== "admin") return { error: "Unauthorized" };
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient.from("tool_submissions").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/submissions");
+  return { success: true };
+}
+
 export async function getAllSubmissions() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

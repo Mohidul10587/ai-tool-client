@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateSubmission } from "@/lib/submission-actions";
+import { updateSubmission, deleteSubmission } from "@/lib/submission-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,6 +29,8 @@ type Submission = {
   use_cases?: { title: string; audience: string; description: string }[];
   pros?: string[];
   cons?: string[];
+  short_description?: string;
+  detail_description?: string;
 };
 
 const FILTERS = ["all", "pending", "published", "rejected"] as const;
@@ -73,6 +75,8 @@ export function AdminSubmissionsList({
       use_cases: editing.use_cases,
       pros: editing.pros?.filter(Boolean),
       cons: editing.cons?.filter(Boolean),
+      short_description: editing.short_description,
+      detail_description: editing.detail_description,
       status,
     });
     setSaving(false);
@@ -82,6 +86,16 @@ export function AdminSubmissionsList({
       setEditing(null);
       router.refresh();
     }
+  }
+
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  async function handleDelete(id: string) {
+    if (!confirm("Permanently delete this tool? This cannot be undone.")) return;
+    setDeleting(id);
+    await deleteSubmission(id);
+    setDeleting(null);
+    router.refresh();
   }
 
   async function quickStatus(id: string, status: Submission["status"]) {
@@ -157,6 +171,11 @@ export function AdminSubmissionsList({
                       Publish
                     </Button>
                   )}
+                  <Button size="sm" variant="destructive"
+                    disabled={deleting === s.id}
+                    onClick={() => handleDelete(s.id)}>
+                    {deleting === s.id ? "Deleting…" : "Delete"}
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>

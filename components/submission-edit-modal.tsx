@@ -31,6 +31,8 @@ type Submission = {
   use_cases?: { title: string; audience: string; description: string }[];
   pros?: string[];
   cons?: string[];
+  short_description?: string;
+  detail_description?: string;
 };
 
 interface Props {
@@ -167,6 +169,18 @@ export function SubmissionEditModal({ editing, saving, error, onClose, onChange,
             <Label>Overview</Label>
             <Textarea rows={4} value={editing.overview ?? ""}
               onChange={(e) => update({ overview: e.target.value })} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Short Description</Label>
+            <Textarea rows={2} placeholder="Brief one-liner shown in listings (~160 chars)" value={editing.short_description ?? ""}
+              onChange={(e) => update({ short_description: e.target.value })} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Detail Description</Label>
+            <Textarea rows={6} placeholder="Full detailed description shown on the tool page" value={editing.detail_description ?? ""}
+              onChange={(e) => update({ detail_description: e.target.value })} />
           </div>
 
           <div className="space-y-2">

@@ -10,7 +10,7 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
 
   const { data: tool } = await supabase
     .from("tool_submissions")
-    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url, hero_image_url, url, key_features, use_cases, pricing_info, pros, cons, platform")
+    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url, hero_image_url, url, key_features, use_cases, pricing_info, pros, cons, platform, short_description, detail_description")
     .eq("slug", slug)
     .eq("status", "published")
     .single();

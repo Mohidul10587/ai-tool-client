@@ -23,12 +23,46 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     .not("name", "is", null)
     .order("updated_at", { ascending: false });
 
+  let voteMap: Record<string, 1 | -1> = {};
+  let voteCounts: Record<string, { upvotes: number; downvotes: number }> = {};
+
+  if (tools?.length) {
+    const ids = tools.map((t) => t.id);
+
+    const [votesRes, { data: { user } }] = await Promise.all([
+      supabase.from("tool_submissions").select("id, upvotes, downvotes").in("id", ids),
+      supabase.auth.getUser(),
+    ]);
+
+    if (!votesRes.error) {
+      voteCounts = Object.fromEntries(
+        (votesRes.data ?? []).map((t) => [t.id, { upvotes: t.upvotes ?? 0, downvotes: t.downvotes ?? 0 }])
+      );
+
+      if (user) {
+        const { data: userVotes } = await supabase
+          .from("tool_votes")
+          .select("tool_id, vote")
+          .eq("user_id", user.id)
+          .in("tool_id", ids);
+        voteMap = Object.fromEntries((userVotes ?? []).map((v) => [v.tool_id, v.vote]));
+      }
+    }
+  }
+
+  const toolsWithVotes = (tools ?? []).map((t) => ({
+    ...t,
+    upvotes: voteCounts[t.id]?.upvotes ?? 0,
+    downvotes: voteCounts[t.id]?.downvotes ?? 0,
+    userVote: voteMap[t.id] ?? null,
+  }));
+
   const featuredAds = await getApprovedFeaturedAds();
 
   return (
     <CategoryPageClient
       subcategoryName={subcategory.name}
-      tools={tools || []}
+      tools={toolsWithVotes}
       featuredAds={featuredAds}
     />
   );

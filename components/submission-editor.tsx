@@ -33,6 +33,8 @@ type Submission = {
   use_cases?: { title: string; audience: string; description: string }[];
   pros?: string[];
   cons?: string[];
+  short_description?: string;
+  detail_description?: string;
 };
 
 export function SubmissionEditor({ submissions }: { submissions: Submission[] }) {
@@ -60,6 +62,8 @@ export function SubmissionEditor({ submissions }: { submissions: Submission[] })
       pricing_info: editing.pricing_info,
       pros: editing.pros,
       cons: editing.cons,
+      short_description: editing.short_description,
+      detail_description: editing.detail_description,
       status,
     });
     setSaving(false);
@@ -217,6 +221,26 @@ export function SubmissionEditor({ submissions }: { submissions: Submission[] })
                   rows={4}
                   value={editing.overview ?? ""}
                   onChange={(e) => setEditing((p) => p ? { ...p, overview: e.target.value } : p)}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Short Description</Label>
+                <Textarea
+                  rows={2}
+                  placeholder="A brief one-liner shown in listings (max ~160 chars)"
+                  value={editing.short_description ?? ""}
+                  onChange={(e) => setEditing((p) => p ? { ...p, short_description: e.target.value } : p)}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Detail Description</Label>
+                <Textarea
+                  rows={6}
+                  placeholder="Full detailed description shown on the tool page"
+                  value={editing.detail_description ?? ""}
+                  onChange={(e) => setEditing((p) => p ? { ...p, detail_description: e.target.value } : p)}
                 />
               </div>
 

@@ -6,42 +6,63 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const supabase = await createClient();
   const { subcategory } = await searchParams;
 
-  // Fetch ALL tools with proper null handling
   let query = supabase
     .from("tool_submissions")
-    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url, status")
+    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url")
     .eq("status", "published")
     .not("name", "is", null)
     .order("updated_at", { ascending: false });
 
-  // Filter by subcategory if provided
   if (subcategory) {
     const { data: subcat } = await supabase
       .from("subcategories")
       .select("id")
       .eq("slug", subcategory)
       .single();
-    
-    if (subcat) {
-      query = query.eq("subcategory_id", subcat.id);
+    if (subcat) query = query.eq("subcategory_id", subcat.id);
+  }
+
+  const { data: tools } = await query.limit(100);
+
+  // Try to fetch vote counts (only works after migration)
+  let voteMap: Record<string, 1 | -1> = {};
+  let voteCounts: Record<string, { upvotes: number; downvotes: number }> = {};
+
+  if (tools?.length) {
+    const ids = tools.map((t) => t.id);
+
+    const [votesRes, { data: { user } }] = await Promise.all([
+      supabase.from("tool_submissions").select("id, upvotes, downvotes").in("id", ids),
+      supabase.auth.getUser(),
+    ]);
+
+    if (!votesRes.error) {
+      voteCounts = Object.fromEntries(
+        (votesRes.data ?? []).map((t) => [t.id, { upvotes: t.upvotes ?? 0, downvotes: t.downvotes ?? 0 }])
+      );
+
+      if (user) {
+        const { data: userVotes } = await supabase
+          .from("tool_votes")
+          .select("tool_id, vote")
+          .eq("user_id", user.id)
+          .in("tool_id", ids);
+        voteMap = Object.fromEntries((userVotes ?? []).map((v) => [v.tool_id, v.vote]));
+      }
     }
   }
 
-  const { data: tools, error } = await query.limit(100);
+  const toolsWithVotes = (tools ?? []).map((t) => ({
+    ...t,
+    upvotes: voteCounts[t.id]?.upvotes ?? 0,
+    downvotes: voteCounts[t.id]?.downvotes ?? 0,
+    userVote: voteMap[t.id] ?? null,
+  }));
 
-  console.log("=== TOOLS DEBUG ===");
-  console.log("Query error:", error);
-  console.log("Tools found:", tools?.length);
-  console.log("Tools:", tools);
-  console.log("==================");
+  const [categories, featuredAds] = await Promise.all([
+    supabase.from("categories").select("*, subcategories(*)").order("display_order").then(({ data }) => data ?? []),
+    getApprovedFeaturedAds(),
+  ]);
 
-  // Fetch categories for filter
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("*, subcategories(*)")
-    .order("display_order");
-
-  const featuredAds = await getApprovedFeaturedAds();
-
-  return <HomePageClient tools={tools || []} categories={categories || []} selectedSubcategory={subcategory} featuredAds={featuredAds} />;
+  return <HomePageClient tools={toolsWithVotes} categories={categories} selectedSubcategory={subcategory} featuredAds={featuredAds} />;
 }
