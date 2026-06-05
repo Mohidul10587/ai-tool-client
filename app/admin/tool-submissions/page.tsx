@@ -17,17 +17,14 @@ export default async function AdminSubmissionsPage({
   const adminClient = createAdminClient();
   let query = adminClient
     .from("tool_submissions")
-    .select("id, url, status, submitted_at, updated_at, name, slug, category_id, subcategory_id, category_snapshot, subcategory_snapshot, pricing, overview, short_description, detail_description, logo_url, hero_image_url, platform, pricing_info, key_features, use_cases, pros, cons, user_id")
+    .select("id, url, status, submitted_at, updated_at, name, slug, category_id, subcategory_id, category_snapshot, subcategory_snapshot, pricing, overview, short_description, detail_description, logo_url, hero_image_url, platform, pricing_info, key_features, use_cases, pros, cons, tags, user_id")
     .order("submitted_at", { ascending: false });
 
   if (status && status !== "all") {
     query = query.eq("status", status);
   }
 
-  const { data: submissions, error } = await query;
-
-  console.log("Query error:", error);
-  console.log("Submissions data:", submissions);
+  const { data: submissions } = await query;
 
   return (
     <div className="space-y-4 max-w-6xl">

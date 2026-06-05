@@ -29,6 +29,7 @@ type Submission = {
   use_cases?: { title: string; audience: string; description: string }[];
   pros?: string[];
   cons?: string[];
+  tags?: string[];
   short_description?: string;
   detail_description?: string;
 };
@@ -45,6 +46,7 @@ export function AdminSubmissionsList({
   activeFilter: string;
 }) {
   const [editing, setEditing] = useState<Submission | null>(null);
+  const [editKey, setEditKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -53,30 +55,32 @@ export function AdminSubmissionsList({
     router.push(`/admin/submissions?status=${f}`);
   }
 
-  async function handleSave(status: Submission["status"]) {
+  async function handleSave(status: Submission["status"], overrides?: Partial<Submission>) {
     if (!editing) return;
     setSaving(true);
     setError(null);
-    const result = await updateSubmission(editing.id, {
-      url: editing.url,
-      name: editing.name,
-      slug: editing.slug,
-      category_id: editing.category_id,
-      subcategory_id: editing.subcategory_id,
-      category_snapshot: editing.category_snapshot,
-      subcategory_snapshot: editing.subcategory_snapshot,
-      pricing: editing.pricing,
-      overview: editing.overview,
-      logo_url: editing.logo_url,
-      hero_image_url: editing.hero_image_url,
-      platform: editing.platform,
-      pricing_info: editing.pricing_info,
-      key_features: editing.key_features,
-      use_cases: editing.use_cases,
-      pros: editing.pros?.filter(Boolean),
-      cons: editing.cons?.filter(Boolean),
-      short_description: editing.short_description,
-      detail_description: editing.detail_description,
+    const merged = { ...editing, ...overrides };
+    const result = await updateSubmission(merged.id, {
+      url: merged.url,
+      name: merged.name,
+      slug: merged.slug,
+      category_id: merged.category_id,
+      subcategory_id: merged.subcategory_id,
+      category_snapshot: merged.category_snapshot,
+      subcategory_snapshot: merged.subcategory_snapshot,
+      pricing: merged.pricing,
+      overview: merged.overview,
+      logo_url: merged.logo_url,
+      hero_image_url: merged.hero_image_url,
+      platform: merged.platform,
+      pricing_info: merged.pricing_info,
+      key_features: merged.key_features,
+      use_cases: merged.use_cases,
+      pros: merged.pros?.filter(Boolean),
+      cons: merged.cons?.filter(Boolean),
+      tags: merged.tags?.filter(Boolean),
+      short_description: merged.short_description,
+      detail_description: merged.detail_description,
       status,
     });
     setSaving(false);
@@ -158,7 +162,7 @@ export function AdminSubmissionsList({
               <TableCell>
                 <div className="flex gap-2 flex-wrap">
                   <Button size="sm" variant="outline"
-                    onClick={() => { setEditing(s); setError(null); }}>
+                    onClick={() => { setEditing(s); setEditKey(k => k + 1); setError(null); }}>
                     Edit
                   </Button>
                   {s.status === "published" ? (
@@ -184,6 +188,7 @@ export function AdminSubmissionsList({
       </Table>
 
       <SubmissionEditModal
+        key={editKey}
         editing={editing}
         saving={saving}
         error={error}

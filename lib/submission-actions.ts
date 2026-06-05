@@ -21,7 +21,7 @@ export async function getUserSubmissions() {
 
   const { data, error } = await supabase
     .from("tool_submissions")
-    .select("id, url, name, category_id, subcategory_id, category_snapshot, subcategory_snapshot, pricing, overview, status, submitted_at, updated_at")
+    .select("id, url, name, category_id, subcategory_id, category_snapshot, subcategory_snapshot, pricing, overview, status, submitted_at, updated_at, tags")
     .eq("user_id", user.id)
     .order("submitted_at", { ascending: false });
   if (error) return { error: error.message };

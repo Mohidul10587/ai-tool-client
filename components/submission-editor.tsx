@@ -33,6 +33,7 @@ type Submission = {
   use_cases?: { title: string; audience: string; description: string }[];
   pros?: string[];
   cons?: string[];
+  tags?: string[];
   short_description?: string;
   detail_description?: string;
 };
@@ -62,6 +63,7 @@ export function SubmissionEditor({ submissions }: { submissions: Submission[] })
       pricing_info: editing.pricing_info,
       pros: editing.pros,
       cons: editing.cons,
+      tags: editing.tags,
       short_description: editing.short_description,
       detail_description: editing.detail_description,
       status,
@@ -288,6 +290,14 @@ export function SubmissionEditor({ submissions }: { submissions: Submission[] })
                   rows={3}
                   value={(editing.cons ?? []).join("\n")}
                   onChange={(e) => setEditing((p) => p ? { ...p, cons: e.target.value.split("\n").filter(Boolean) } : p)}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Tags (comma separated)</Label>
+                <Input
+                  value={(editing.tags ?? []).join(", ")}
+                  onChange={(e) => setEditing((p) => p ? { ...p, tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean) } : p)}
                 />
               </div>
 
