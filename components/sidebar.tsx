@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-type Ad = { id: number; url: string; description: string; tool_name: string };
+type Ad = { id: number; url: string; description: string; tool_name: string; logo_url?: string };
 
 const BG_COLORS = [
   "bg-rose-100", "bg-sky-100", "bg-amber-100", "bg-emerald-100",
@@ -23,11 +23,16 @@ function AdCard({ ad, index }: { ad: Ad; index: number }) {
       target="_blank"
       rel="noopener noreferrer sponsored"
       title={ad.tool_name || ad.description}
-      className="group flex flex-col items-center gap-1.5 rounded-xl border border-black/10 bg-white p-3 text-center transition-all hover:border-black/20 hover:shadow-sm w-full"
+      className={`group flex flex-col items-center gap-1.5 rounded-xl border border-black/10 p-3 text-center transition-all hover:border-black/20 hover:shadow-sm w-full ${BG_COLORS[index % BG_COLORS.length]}`}
     >
       {/* Logo */}
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-black/70 ${BG_COLORS[index % BG_COLORS.length]}`}>
-        {initials || "AD"}
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-black/70 bg-white/60">
+        {ad.logo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={ad.logo_url} alt={ad.tool_name} className="h-8 w-8 rounded object-contain" />
+        ) : (
+          initials || "AD"
+        )}
       </div>
       {/* Name */}
       <p className="w-full truncate text-[11px] font-semibold text-black leading-tight">

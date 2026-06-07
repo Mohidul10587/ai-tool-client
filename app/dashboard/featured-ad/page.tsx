@@ -8,7 +8,7 @@ export default async function DashboardFeaturedAdPage() {
 
   const { data: ads } = await supabase
     .from("featured_ads")
-    .select("id, url, description, tool_name, price_paid, status, rejection_message, submitted_at")
+    .select("id, url, description, tool_name, price_paid, status, rejection_message, submitted_at, logo_url")
     .eq("user_id", user?.id)
     .order("submitted_at", { ascending: false });
 

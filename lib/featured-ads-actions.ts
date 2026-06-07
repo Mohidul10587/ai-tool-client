@@ -59,14 +59,14 @@ export async function updateFeaturedAdStatus(
   return { success: true };
 }
 
-export async function updateFeaturedAd(id: number, data: { url: string; description: string; tool_name: string }) {
+export async function updateFeaturedAd(id: number, data: { url: string; description: string; tool_name: string; logo_url?: string }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (user?.user_metadata?.role !== "admin") return { error: "Unauthorized" };
 
   const { error } = await supabase
     .from("featured_ads")
-    .update({ url: data.url, description: data.description, tool_name: data.tool_name })
+    .update({ url: data.url, description: data.description, tool_name: data.tool_name, ...(data.logo_url !== undefined && { logo_url: data.logo_url }) })
     .eq("id", id);
 
   if (error) return { error: error.message };
@@ -90,20 +90,20 @@ export async function getApprovedFeaturedAds() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("featured_ads")
-    .select("id, url, description, tool_name")
+    .select("id, url, description, tool_name, logo_url")
     .eq("status", "approved")
     .order("approved_at", { ascending: false });
   return data ?? [];
 }
 
-export async function updateUserFeaturedAd(id: number, data: { url: string; tool_name: string; description?: string }) {
+export async function updateUserFeaturedAd(id: number, data: { url: string; tool_name: string; description?: string; logo_url?: string }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
   const { error } = await supabase
     .from("featured_ads")
-    .update({ url: data.url, tool_name: data.tool_name, ...(data.description !== undefined && { description: data.description }), status: "pending" })
+    .update({ url: data.url, tool_name: data.tool_name, ...(data.description !== undefined && { description: data.description }), ...(data.logo_url !== undefined && { logo_url: data.logo_url }), status: "pending" })
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) return { error: error.message };

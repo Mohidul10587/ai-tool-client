@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,6 +59,15 @@ interface Props {
   ) => void;
 }
 
+async function uploadImage(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch("/api/upload", { method: "POST", body: fd });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? "Upload failed");
+  return json.url as string;
+}
+
 export function SubmissionEditModal({
   editing,
   saving,
@@ -68,13 +77,23 @@ export function SubmissionEditModal({
   onSave,
 }: Props) {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
-  );
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [tagsInput, setTagsInput] = useState((editing?.tags ?? []).join(", "));
+  const [uploading, setUploading] = useState(false);
+
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [heroFile, setHeroFile] = useState<File | null>(null);
+  const [heroPreview, setHeroPreview] = useState<string>("");
+  const logoRef = useRef<HTMLInputElement>(null);
+  const heroRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setTagsInput((editing?.tags ?? []).join(", "));
+    setLogoFile(null);
+    setLogoPreview(editing?.logo_url ?? "");
+    setHeroFile(null);
+    setHeroPreview(editing?.hero_image_url ?? "");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing?.id, JSON.stringify(editing?.tags)]);
 
@@ -109,8 +128,19 @@ export function SubmissionEditModal({
       .filter(Boolean);
   }
 
-  function handleSave(status: Submission["status"]) {
-    onSave(status, { tags: parsedTags() });
+  async function handleSave(status: Submission["status"]) {
+    setUploading(true);
+    try {
+      const overrides: Partial<Submission> = { tags: parsedTags() };
+      if (logoFile) overrides.logo_url = await uploadImage(logoFile);
+      if (heroFile) overrides.hero_image_url = await uploadImage(heroFile);
+      onSave(status, overrides);
+    } catch (e: any) {
+      // bubble error up via the existing error display
+      onSave(status, { tags: parsedTags() });
+    } finally {
+      setUploading(false);
+    }
   }
 
   function handleCategoryChange(categoryId: string) {
@@ -160,29 +190,51 @@ export function SubmissionEditModal({
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            {(
-              [
-                "name",
-                "slug",
-                "logo_url",
-                "hero_image_url",
-                "platform",
-              ] as const
-            ).map((key) => (
+            {(["name", "slug", "platform"] as const).map((key) => (
               <div key={key} className="space-y-1">
                 <Label className="capitalize">{key.replace(/_/g, " ")}</Label>
                 <Input
                   value={(editing[key] as string) ?? ""}
                   onChange={(e) => update({ [key]: e.target.value })}
                 />
-                {key === "logo_url" && (
-                  <p className="text-xs text-muted-foreground">Recommended: 200×200 px · PNG/SVG with transparent background</p>
-                )}
-                {key === "hero_image_url" && (
-                  <p className="text-xs text-muted-foreground">Recommended: 1200×630 px · JPG or PNG · max 2MB</p>
-                )}
               </div>
             ))}
+          </div>
+
+          {/* Logo upload */}
+          <div className="space-y-2">
+            <Label>Logo</Label>
+            {logoPreview && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoPreview} alt="logo preview" className="h-12 w-12 rounded object-contain border p-0.5" />
+            )}
+            <p className="text-xs text-muted-foreground">Recommended: 200×200 px · PNG/SVG with transparent background</p>
+            <Button type="button" variant="outline" size="sm" onClick={() => logoRef.current?.click()}>
+              {logoPreview ? "Change Logo" : "Upload Logo"}
+            </Button>
+            <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+              const f = e.target.files?.[0]; if (!f) return;
+              setLogoFile(f); setLogoPreview(URL.createObjectURL(f));
+            }} />
+            {logoFile && <p className="text-xs text-muted-foreground">{logoFile.name} — will upload on save</p>}
+          </div>
+
+          {/* Hero image upload */}
+          <div className="space-y-2">
+            <Label>Hero Image</Label>
+            {heroPreview && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={heroPreview} alt="hero preview" className="h-24 w-full rounded object-cover border" />
+            )}
+            <p className="text-xs text-muted-foreground">Recommended: 1200×630 px · JPG or PNG · max 5MB</p>
+            <Button type="button" variant="outline" size="sm" onClick={() => heroRef.current?.click()}>
+              {heroPreview ? "Change Hero Image" : "Upload Hero Image"}
+            </Button>
+            <input ref={heroRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+              const f = e.target.files?.[0]; if (!f) return;
+              setHeroFile(f); setHeroPreview(URL.createObjectURL(f));
+            }} />
+            {heroFile && <p className="text-xs text-muted-foreground">{heroFile.name} — will upload on save</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -462,22 +514,22 @@ export function SubmissionEditModal({
           <div className="flex gap-3 pt-2">
             <Button
               onClick={() => handleSave("published")}
-              disabled={saving}
+              disabled={saving || uploading}
               className="flex-1"
             >
-              {saving ? "Saving…" : "Save & Publish"}
+              {uploading ? "Uploading…" : saving ? "Saving…" : "Save & Publish"}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleSave("pending")}
-              disabled={saving}
+              disabled={saving || uploading}
             >
               Save as Draft
             </Button>
             <Button
               variant="destructive"
               onClick={() => handleSave("rejected")}
-              disabled={saving}
+              disabled={saving || uploading}
             >
               Reject
             </Button>

@@ -16,48 +16,54 @@ export function AvatarUpload({
   currentUrl?: string;
   initials: string;
 }) {
+  const [savedUrl, setSavedUrl] = useState<string | undefined>(currentUrl);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | undefined>(currentUrl);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { setError("Max file size is 2MB"); return; }
+    setError(null);
+    setPendingFile(file);
+    setPreview(URL.createObjectURL(file));
+  }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setError("Max file size is 2MB");
-      return;
-    }
-
+  async function handleSave() {
+    if (!pendingFile) return;
     setUploading(true);
     setError(null);
 
     const supabase = createClient();
-    const ext = file.name.split(".").pop();
+    const ext = pendingFile.name.split(".").pop();
     const path = `${userId}/avatar.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: true });
+      .upload(path, pendingFile, { upsert: true });
 
-    if (uploadError) {
-      setError(uploadError.message);
-      setUploading(false);
-      return;
-    }
+    if (uploadError) { setError(uploadError.message); setUploading(false); return; }
 
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    const publicUrl = `${data.publicUrl}?t=${Date.now()}`; // bust cache
+    const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
 
-    // Save to user metadata
     const fd = new FormData();
-    fd.set("name", ""); // name unchanged — server reads existing if empty
+    fd.set("name", "");
     fd.set("avatar_url", publicUrl);
     await updateProfile(fd);
 
-    setPreview(publicUrl);
+    setSavedUrl(publicUrl);
+    setPendingFile(null);
     setUploading(false);
+  }
+
+  function handleCancel() {
+    setPendingFile(null);
+    setPreview(savedUrl);
+    setError(null);
   }
 
   return (
@@ -70,9 +76,10 @@ export function AvatarUpload({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
+          disabled={uploading}
           className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow hover:opacity-90"
         >
-          {uploading ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
+          <Camera size={13} />
         </button>
       </div>
 
@@ -81,9 +88,18 @@ export function AvatarUpload({
         type="file"
         accept="image/png,image/jpeg,image/webp"
         className="hidden"
-        onChange={handleFile}
+        onChange={handleSelect}
         disabled={uploading}
       />
+
+      {pendingFile && (
+        <div className="flex gap-2">
+          <Button size="sm" onClick={handleSave} disabled={uploading}>
+            {uploading ? <><Loader2 size={13} className="animate-spin mr-1" />Uploading…</> : "Save Photo"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleCancel} disabled={uploading}>Cancel</Button>
+        </div>
+      )}
 
       {error && <p className="text-xs text-destructive">{error}</p>}
       <p className="text-xs text-muted-foreground text-center">
