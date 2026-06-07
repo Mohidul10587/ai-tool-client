@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import {
   Check,
   Sparkles,
@@ -57,6 +57,10 @@ export default function PricingClient({ isLoggedIn = false, pricing }: { isLogge
   const [submitting, setSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<string | null>(null)
 
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+
   const closeModal = () => {
     setActiveModal(null)
     setToolUrl("")
@@ -64,12 +68,30 @@ export default function PricingClient({ isLoggedIn = false, pricing }: { isLogge
     setShortDescription("")
     setSelectedPlan("60")
     setSubmitMessage(null)
+    setLogoFile(null)
+    setLogoPreview(null)
+  }
+
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoFile(file)
+    setLogoPreview(URL.createObjectURL(file))
   }
 
   const handleFeaturedSubmit = async () => {
     if (!toolUrl || !toolName || !shortDescription) return
     setSubmitting(true)
-    const result = await submitFeaturedAd({ url: toolUrl, tool_name: toolName, description: shortDescription })
+    let logo_url: string | undefined
+    if (logoFile) {
+      const fd = new FormData()
+      fd.append("file", logoFile)
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      const json = await res.json()
+      if (!res.ok) { setSubmitMessage(json.error ?? "Logo upload failed"); setSubmitting(false); return }
+      logo_url = json.url
+    }
+    const result = await submitFeaturedAd({ url: toolUrl, tool_name: toolName, description: shortDescription, logo_url })
     setSubmitting(false)
     if (result.error) {
       setSubmitMessage(result.error)
@@ -484,6 +506,19 @@ export default function PricingClient({ isLoggedIn = false, pricing }: { isLogge
                 </Label>
                 <Input id="featured-desc" value={shortDescription} onChange={(e) => setShortDescription(e.target.value.slice(0, 40))} placeholder="AI-powered productivity tool" maxLength={40} />
                 <p className="text-right text-xs text-muted-foreground">{shortDescription.length}/40</p>
+              </div>
+              <div className="space-y-1">
+                <Label>Tool Logo</Label>
+                {logoPreview && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoPreview} alt="Logo preview" className="h-12 w-12 rounded object-contain border p-1" />
+                )}
+                <p className="text-xs text-muted-foreground">Recommended: 200×200 px · PNG or SVG with transparent background · max 2MB</p>
+                <Button type="button" variant="outline" size="sm" onClick={() => logoInputRef.current?.click()}>
+                  {logoPreview ? "Change Logo" : "Upload Logo"}
+                </Button>
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+                {logoFile && <p className="text-xs text-muted-foreground">{logoFile.name} — will upload on submit</p>}
               </div>
               <p className="text-xs text-muted-foreground bg-muted px-3 py-2 rounded-md">
                 <strong>Total:</strong> ${p.featured_spot.price} {p.featured_spot.subtitle} (billed monthly)

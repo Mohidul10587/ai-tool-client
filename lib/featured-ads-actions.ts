@@ -14,7 +14,7 @@ async function getPrice(key: string): Promise<string> {
   return data?.price ?? "";
 }
 
-export async function submitFeaturedAd(formData: { url: string; description: string; tool_name: string }) {
+export async function submitFeaturedAd(formData: { url: string; description: string; tool_name: string; logo_url?: string }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
@@ -27,6 +27,7 @@ export async function submitFeaturedAd(formData: { url: string; description: str
     description: formData.description,
     tool_name: formData.tool_name,
     price_paid,
+    ...(formData.logo_url && { logo_url: formData.logo_url }),
   });
 
   if (error) return { error: error.message };

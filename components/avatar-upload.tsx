@@ -86,7 +86,9 @@ export function AvatarUpload({
       />
 
       {error && <p className="text-xs text-destructive">{error}</p>}
-      <p className="text-xs text-muted-foreground">JPG, PNG or WebP · max 2MB</p>
+      <p className="text-xs text-muted-foreground text-center">
+        Recommended: <strong>200×200 px</strong> · JPG, PNG or WebP · Square shape · max 2MB
+      </p>
     </div>
   );
 }

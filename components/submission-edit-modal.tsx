@@ -175,6 +175,12 @@ export function SubmissionEditModal({
                   value={(editing[key] as string) ?? ""}
                   onChange={(e) => update({ [key]: e.target.value })}
                 />
+                {key === "logo_url" && (
+                  <p className="text-xs text-muted-foreground">Recommended: 200×200 px · PNG/SVG with transparent background</p>
+                )}
+                {key === "hero_image_url" && (
+                  <p className="text-xs text-muted-foreground">Recommended: 1200×630 px · JPG or PNG · max 2MB</p>
+                )}
               </div>
             ))}
           </div>

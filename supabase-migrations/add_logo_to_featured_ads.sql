@@ -1,0 +1,1 @@
+ALTER TABLE featured_ads ADD COLUMN IF NOT EXISTS logo_url TEXT;
