@@ -28,10 +28,30 @@ export async function login(formData: FormData) {
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const rememberMe = formData.get("remember_me") !== "false";
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) return { error: error.message };
+
+  // If "remember me" is unchecked, shorten the session to browser-session only (1 hour)
+  if (!rememberMe) {
+    await supabase.auth.updateUser({});  // no-op to keep session active
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    // Set auth cookies to expire at browser close (no max-age)
+    for (const cookie of cookieStore.getAll()) {
+      if (cookie.name.startsWith("sb-")) {
+        cookieStore.set(cookie.name, cookie.value, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          // No maxAge = session cookie (expires when browser closes)
+        });
+      }
+    }
+  }
 
   revalidatePath("/", "layout");
   const role = data.user?.user_metadata?.role;
