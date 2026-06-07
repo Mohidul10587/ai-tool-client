@@ -151,8 +151,8 @@ export function HomePageClient({
       return matchSearch && matchSubcat && matchPricing;
     })
     .sort((a, b) => {
-      if (sortBy === "newest") return 0; // already ordered by updated_at from server
-      return 0;
+      if (sortBy === "popular") return (b.upvotes ?? 0) - (a.upvotes ?? 0);
+      return 0; // "newest" — already ordered by updated_at from server
     });
 
   const visible = filtered.slice(0, displayCount);
@@ -246,7 +246,7 @@ export function HomePageClient({
           <section className="px-4 pb-16">
             {/* Sort/filter row */}
             <div className="mb-3 flex justify-end gap-1.5 flex-wrap">
-              {["newest", "free", "freemium", "paid"].map((f) => (
+              {["newest", "popular", "free", "freemium", "paid"].map((f) => (
                 <button
                   key={f}
                   onClick={() => {
@@ -265,9 +265,7 @@ export function HomePageClient({
                       : "border border-black/10 bg-black/5 text-black/70 hover:border-black/20 hover:text-black"
                   }`}
                 >
-                  {f === "newest"
-                    ? "Newest"
-                    : f.charAt(0).toUpperCase() + f.slice(1)}
+                  {f === "newest" ? "Newest" : f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}
             </div>
