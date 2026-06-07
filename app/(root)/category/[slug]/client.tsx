@@ -29,7 +29,7 @@ export function CategoryPageClient({
           <Sidebar ads={featuredAds.slice(0, 10)} />
         </div>
 
-        <div className="mx-auto max-w-3xl px-4 py-12 lg:px-0">
+        <div className="flex-1 min-w-0 px-4 py-12">
           <div className="mb-10 text-center">
             <h1 className="text-4xl font-bold text-foreground mb-3">
               {subcategoryName}

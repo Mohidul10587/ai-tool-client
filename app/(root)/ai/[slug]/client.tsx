@@ -349,7 +349,7 @@ export function ToolDetailsClient({
 
   return (
     <>
-      <div className="min-h-screen bg-white relative px-4">
+      <div className="min-h-screen bg-white relative">
         <FeaturedAdsSidebar ads={featuredAds} />
 
         <div className="pb-16 lg:pb-12 flex">
@@ -357,7 +357,7 @@ export function ToolDetailsClient({
             <Sidebar ads={featuredAds.slice(0, 10)} />
           </div>
 
-          <div className="max-w-[900px] mx-auto px-4 py-8">
+          <div className="flex-1 min-w-0 px-4 py-8">
             {/* Header */}
 
             <div className="mb-8">

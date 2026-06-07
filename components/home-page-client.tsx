@@ -158,7 +158,7 @@ export function HomePageClient({
   const visible = filtered.slice(0, displayCount);
 
   return (
-    <div className="min-h-screen bg-white relative px-4">
+    <div className="min-h-screen bg-white relative">
       <FeaturedAdsSidebar ads={featuredAds} />
 
       <div className="pb-16 lg:pb-12 flex">
@@ -166,7 +166,7 @@ export function HomePageClient({
           <Sidebar ads={featuredAds.slice(0, 10)} />
         </div>
 
-        <main className="flex-1 pt-10 lg:pt-0 max-w-4xl mx-auto">
+        <main className="flex-1 pt-10 lg:pt-0 min-w-0">
           {/* Hero */}
           <section className="px-4 pb-4 pt-4 text-center">
             <h1 className="text-xl font-bold tracking-tight text-black md:text-2xl">
