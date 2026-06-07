@@ -24,20 +24,31 @@ export function RoleToggleButton({ userId, currentRole }: { userId: string; curr
   );
 }
 
+import { ConfirmDialog } from "@/components/confirm-dialog";
+
 export function DeleteUserButton({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   async function handleDelete() {
-    if (!confirm("Delete this user permanently?")) return;
     setLoading(true);
     await deleteUser(userId);
     setLoading(false);
+    setOpen(false);
   }
 
   return (
-    <Button size="sm" variant="destructive" onClick={handleDelete} disabled={loading}>
-      {loading ? "…" : "Delete"}
-    </Button>
+    <>
+      <Button size="sm" variant="destructive" onClick={() => setOpen(true)}>Delete</Button>
+      <ConfirmDialog
+        open={open}
+        title="Delete user?"
+        description="This will permanently delete this user and cannot be undone."
+        loading={loading}
+        onConfirm={handleDelete}
+        onCancel={() => setOpen(false)}
+      />
+    </>
   );
 }
 

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SubmissionEditModal } from "@/components/submission-edit-modal";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type Submission = {
   id: string;
@@ -93,12 +94,13 @@ export function AdminSubmissionsList({
   }
 
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
-    if (!confirm("Permanently delete this tool? This cannot be undone.")) return;
     setDeleting(id);
     await deleteSubmission(id);
     setDeleting(null);
+    setConfirmDeleteId(null);
     router.refresh();
   }
 
@@ -177,7 +179,7 @@ export function AdminSubmissionsList({
                   )}
                   <Button size="sm" variant="destructive"
                     disabled={deleting === s.id}
-                    onClick={() => handleDelete(s.id)}>
+                    onClick={() => setConfirmDeleteId(s.id)}>
                     {deleting === s.id ? "Deleting…" : "Delete"}
                   </Button>
                 </div>
@@ -195,6 +197,14 @@ export function AdminSubmissionsList({
         onClose={() => setEditing(null)}
         onChange={setEditing}
         onSave={handleSave}
+      />
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title="Delete tool?"
+        description="This will permanently delete this tool and cannot be undone."
+        loading={!!deleting}
+        onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+        onCancel={() => setConfirmDeleteId(null)}
       />
     </>
   );

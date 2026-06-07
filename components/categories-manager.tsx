@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Pencil, Trash2, GripVertical } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Category } from "@/types/mega-menu";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export function CategoriesManager({ initialCategories }: { initialCategories: Category[] }) {
   const [categories, setCategories] = useState(initialCategories);
@@ -67,10 +68,12 @@ export function CategoriesManager({ initialCategories }: { initialCategories: Ca
     setOpen(false);
   };
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this category?")) return;
     await supabase.from("categories").delete().eq("id", id);
     setCategories(categories.filter(c => c.id !== id));
+    setConfirmDeleteId(null);
   };
 
   return (
@@ -133,7 +136,7 @@ export function CategoriesManager({ initialCategories }: { initialCategories: Ca
                 <Button variant="ghost" size="icon" onClick={() => openDialog(category)}>
                   <Pencil className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(category.id)}>
+                <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteId(category.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -148,6 +151,13 @@ export function CategoriesManager({ initialCategories }: { initialCategories: Ca
           </div>
         ))}
       </div>
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="Delete category?"
+        description="This will permanently delete this category and cannot be undone."
+        onConfirm={() => confirmDeleteId !== null && handleDelete(confirmDeleteId)}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   );
 }

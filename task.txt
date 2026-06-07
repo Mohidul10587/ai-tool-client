@@ -1,1 +1,179 @@
-হোমপেজে Popular নামে একটি অপশন থাকবে। যখন কোনো ব্যবহারকারী Popular-এ ক্লিক করবে, তখন সবচেয়ে বেশি Upvote পাওয়া টুলগুলো প্রদর্শিত হবে। Popular অপশনটি Newest-এর ডান পাশে অবস্থান করবে।
+use custom smooth comfirm modal for entire project for delete
+
+> First, let me find all places where delete confirmations happen:
+Searching for: confirm\(|window\.confirm|onClick.*delete\|onClick.*Delete|handleDelete (*.tsx) (using tool: grep)
+ ✓ Successfully found 22 matches in 9 files under current directory
+ - Completed in 0.47s
+
+> Some files already use onConfirm — let me check that existing modal:
+Searching for: ConfirmModal|ConfirmDialog|onConfirm (*.tsx) (using tool: grep)
+ ✓ Successfully found 15 matches in 5 files under current directory
+ - Completed in 0.41s
+
+Reading file: /home/mohid/Desktop/Shipon/ai-tools/components/confirm-dialog.tsx, all lines (using tool: read)
+ ✓ Successfully read 1136 bytes from /home/mohid/Desktop/Shipon/ai-tools/components/confirm-dialog.tsx
+ - Completed in 0.0s
+
+> Good — there's already a ConfirmDialog. I just need to replace the 4 remaining 
+window.confirm() usages in admin-buttons.tsx, admin-submissions-list.tsx, categories-manager.tsx
+, and app/admin/featured-ads/client.tsx. Let me read them all:
+Batch fs_read operation with 4 operations (using tool: read)
+
+↱ Operation 1: Reading file: /home/mohid/Desktop/Shipon/ai-tools/components/admin-buttons.tsx, all lines
+↱ Operation 2: Reading file: /home/mohid/Desktop/Shipon/ai-tools/components/admin-submissions-list.tsx, all lines
+↱ Operation 3: Reading file: /home/mohid/Desktop/Shipon/ai-tools/components/categories-manager.tsx, all lines
+↱ Operation 4: Reading file: /home/mohid/Desktop/Shipon/ai-tools/app/admin/featured-ads/client.tsx, all lines
+ ✓ Successfully read 3417 bytes from /home/mohid/Desktop/Shipon/ai-tools/components/admin-buttons.tsx
+
+ ✓ Successfully read 6595 bytes from /home/mohid/Desktop/Shipon/ai-tools/components/admin-submissions-list.tsx
+
+ ✓ Successfully read 6474 bytes from /home/mohid/Desktop/Shipon/ai-tools/components/categories-manager.tsx
+
+ ✓ Successfully read 10014 bytes from /home/mohid/Desktop/Shipon/ai-tools/app/admin/featured-ads/client.tsx
+
+ ⋮ 
+
+- Summary: 4 operations processed, 4 successful, 0 failed
+ - Completed in 0.0s
+
+> Now I have the full picture. I'll update all 4 files to use ConfirmDialog instead of 
+window.confirm:
+I'll modify the following file: components/admin-buttons.tsx (using tool: write)
+
++     27: import { ConfirmDialog } from "@/components/confirm-dialog";
++     28: 
+  27, 29: export function DeleteUserButton({ userId }: { userId: string }) {
+  28, 30:   const [loading, setLoading] = useState(false);
++     31:   const [open, setOpen] = useState(false);
+  29, 32: 
+  30, 33:   async function handleDelete() {
+- 31    :     if (!confirm("Delete this user permanently?")) return;
+  32, 34:     setLoading(true);
+  33, 35:     await deleteUser(userId);
+  34, 36:     setLoading(false);
++     37:     setOpen(false);
+  35, 38:   }
+  36, 39: 
+  37, 40:   return (
+- 38    :     <Button size="sm" variant="destructive" onClick={handleDelete} disabled={loading}>
+- 39    :       {loading ? "…" : "Delete"}
+- 40    :     </Button>
++     41:     <>
++     42:       <Button size="sm" variant="destructive" onClick={() => setOpen(true)}>Delete</Button>
++     43:       <ConfirmDialog
++     44:         open={open}
++     45:         title="Delete user?"
++     46:         description="This will permanently delete this user and cannot be undone."
++     47:         loading={loading}
++     48:         onConfirm={handleDelete}
++     49:         onCancel={() => setOpen(false)}
++     50:       />
++     51:     </>
+  41, 52:   );
+  42, 53: }
+
+Updating: components/admin-buttons.tsx
+ - Completed in 0.1s
+
+I'll modify the following file: components/admin-submissions-list.tsx (using tool: write)
+
+- 9    : import { SubmissionEditModal } from "@/components/submission-edit-modal";
++     9: import { SubmissionEditModal } from "@/components/submission-edit-modal";
++    10: import { ConfirmDialog } from "@/components/confirm-dialog";
+
+Updating: components/admin-submissions-list.tsx
+ - Completed in 0.1s
+
+I'll modify the following file: components/admin-submissions-list.tsx (using tool: write)
+
+   96,  96:   const [deleting, setDeleting] = useState<string | null>(null);
++       97:   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+   97,  98: 
+   98,  99:   async function handleDelete(id: string) {
+-  99     :     if (!confirm("Permanently delete this tool? This cannot be undone.")) return;
+  100, 100:     setDeleting(id);
+  101, 101:     await deleteSubmission(id);
+  102, 102:     setDeleting(null);
++      103:     setConfirmDeleteId(null);
+  103, 104:     router.refresh();
+  104, 105:   }
+
+Updating: components/admin-submissions-list.tsx
+ - Completed in 0.0s
+
+I'll modify the following file: components/admin-submissions-list.tsx (using tool: write)
+
+  180, 180:                   <Button size="sm" variant="destructive"
+  181, 181:                     disabled={deleting === s.id}
+- 182     :                     onClick={() => handleDelete(s.id)}>
++      182:                     onClick={() => setConfirmDeleteId(s.id)}>
+  183, 183:                     {deleting === s.id ? "Deleting…" : "Delete"}
+  184, 184:                   </Button>
+
+Updating: components/admin-submissions-list.tsx
+⠋ Thinking... - Completed in 0.0s
+
+I'll modify the following file: components/admin-submissions-list.tsx (using tool: write)
+
+  192, 192:       <SubmissionEditModal
+  193, 193:         key={editKey}
+  194, 194:         editing={editing}
+  195, 195:         saving={saving}
+  196, 196:         error={error}
+  197, 197:         onClose={() => setEditing(null)}
+  198, 198:         onChange={setEditing}
+  199, 199:         onSave={handleSave}
++      200:       />
++      201:       <ConfirmDialog
++      202:         open={!!confirmDeleteId}
++      203:         title="Delete tool?"
++      204:         description="This will permanently delete this tool and cannot be undone."
++      205:         loading={!!deleting}
++      206:         onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
++      207:         onCancel={() => setConfirmDeleteId(null)}
+  200, 208:       />
+
+Updating: components/admin-submissions-list.tsx
+ - Completed in 0.0s
+
+> Now categories-manager.tsx:
+I'll modify the following file: components/categories-manager.tsx (using tool: write)
+
+  7,  7: import { Plus, Pencil, Trash2, GripVertical } from "lucide-react";
+  8,  8: import { createClient } from "@/lib/supabase/client";
+- 9    : import type { Category } from "@/types/mega-menu";
++     9: import type { Category } from "@/types/mega-menu";
++    10: import { ConfirmDialog } from "@/components/confirm-dialog";
+
+Updating: components/categories-manager.tsx
+ - Completed in 0.0s
+
+I'll modify the following file: components/categories-manager.tsx (using tool: write)
+
++     71:   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
++     72: 
+  71, 73:   const handleDelete = async (id: number) => {
+- 72    :     if (!confirm("Delete this category?")) return;
+  73, 74:     await supabase.from("categories").delete().eq("id", id);
+  74, 75:     setCategories(categories.filter(c => c.id !== id));
++     76:     setConfirmDeleteId(null);
+  75, 77:   };
+
+Updating: components/categories-manager.tsx
+ - Completed in 0.2s
+
+Unable to verify subscription status: service error
+
+Monthly request limit reached
+
+You've used all your free requests for this month. You have two options:
+
+1. Upgrade to a paid subscription for increased limits. See our Pricing page for what's included> https://kiro.dev/pricing
+2. Wait until next month when your limit automatically resets. The limits reset on 07/01.
+
+Use /subscribe to upgrade your subscription.
+
+
+Allow this action? Use 't' to trust (always allow) this tool for the session. [y/n/t]:
+
+> 

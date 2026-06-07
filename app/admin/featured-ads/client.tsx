@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type Ad = {
   id: number;
@@ -43,6 +44,7 @@ export default function AdminFeaturedAdsClient({ ads: initial }: { ads: Ad[] }) 
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [rejectMsg, setRejectMsg] = useState("");
   const [loading, setLoading] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const logoRef = useRef<HTMLInputElement>(null);
 
   const refresh = (updated: Ad) =>
@@ -87,10 +89,10 @@ export default function AdminFeaturedAdsClient({ ads: initial }: { ads: Ad[] }) 
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this ad?")) return;
     setLoading(id);
     await deleteFeaturedAd(id);
     setAds((prev) => prev.filter((a) => a.id !== id));
+    setConfirmDeleteId(null);
     setLoading(null);
   };
 
@@ -142,7 +144,7 @@ export default function AdminFeaturedAdsClient({ ads: initial }: { ads: Ad[] }) 
                   </>
                 )}
                 <button onClick={() => openEdit(ad)} title="Edit" className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"><Pencil className="h-4 w-4" /></button>
-                <button onClick={() => handleDelete(ad.id)} disabled={loading === ad.id} title="Delete" className="rounded-lg border border-gray-200 p-1.5 text-red-400 hover:bg-red-50 disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
+                <button onClick={() => setConfirmDeleteId(ad.id)} disabled={loading === ad.id} title="Delete" className="rounded-lg border border-gray-200 p-1.5 text-red-400 hover:bg-red-50 disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
               </div>
             </div>
           </div>
@@ -190,6 +192,15 @@ export default function AdminFeaturedAdsClient({ ads: initial }: { ads: Ad[] }) 
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="Delete this ad?"
+        description="This will permanently delete this featured ad and cannot be undone."
+        loading={loading === confirmDeleteId}
+        onConfirm={() => confirmDeleteId !== null && handleDelete(confirmDeleteId)}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   );
 }
