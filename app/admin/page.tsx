@@ -4,7 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { RoleToggleButton, DeleteUserButton } from "@/components/admin-buttons";
+import { Plus, FileText } from "lucide-react";
+import Link from "next/link";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -18,6 +21,39 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-6 max-w-6xl">
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/admin/add-tool">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Tool
+              </Button>
+            </Link>
+            <Link href="/admin/add-featured-ad">
+              <Button variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Add Featured Ad
+              </Button>
+            </Link>
+            <Link href="/admin/tool-submissions">
+              <Button variant="outline">
+                View Submissions
+              </Button>
+            </Link>
+            <Link href="/admin/featured-ads">
+              <Button variant="outline">
+                Manage Featured Ads
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: "Total Users", value: users.length },

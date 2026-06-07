@@ -1,53 +1,115 @@
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import { Zap, Mail } from "lucide-react";
+import { Linkedin } from "lucide-react";
+
+const footerLinks = {
+  Product: [
+    { name: "Submit Tool", href: "/dashboard" },
+    { name: "Pricing", href: "/pricing" },
+  ],
+  Resources: [
+    { name: "Blog", href: "#" },
+    { name: "Newsletter", href: "#" },
+    { name: "FAQ", href: "#" },
+  ],
+  Company: [
+    { name: "About Us", href: "#" },
+    { name: "Contact", href: "#" },
+  ],
+  Legal: [
+    { name: "Privacy Policy", href: "/privacy" },
+    { name: "Terms of Service", href: "/terms" },
+    { name: "Cookie Policy", href: "#" },
+    { name: "DMCA", href: "#" },
+    { name: "Disclaimer", href: "#" },
+  ],
+};
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-background mt-16">
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="border-t border-black/10 bg-white">
+      <div className="mx-auto max-w-7xl px-4 py-10 lg:px-56 xl:px-60">
+        {/* Top Section */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand */}
-          <div className="space-y-3">
-            <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-              <Zap className="h-5 w-5" />
-              AI Tools
+          <div className="lg:col-span-2">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black">
+                <Zap className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-base font-bold text-black">AI Tools</span>
             </Link>
-            <p className="text-sm text-muted-foreground">
-              Discover the best AI tools for every need.
+            <p className="mt-3 max-w-xs text-xs text-black/60">
+              The largest directory of AI tools. Discover, compare, and find the best AI solutions for your needs.
             </p>
+            {/* Social Links */}
+            <div className="mt-4 flex gap-3">
+              {/* X (Twitter) */}
+              <a
+                href="#"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-black/5 text-black/60 transition-all hover:bg-black/10 hover:text-black"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+              </a>
+              {/* Facebook */}
+              <a
+                href="#"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-black/5 text-black/60 transition-all hover:bg-black/10 hover:text-black"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+              </a>
+              {/* LinkedIn */}
+              <a
+                href="#"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-black/5 text-black/60 transition-all hover:bg-black/10 hover:text-black"
+              >
+                <Linkedin className="h-4 w-4" />
+              </a>
+              {/* Email */}
+              <a
+                href="mailto:contact@aitools.com"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-black/5 text-black/60 transition-all hover:bg-black/10 hover:text-black"
+              >
+                <Mail className="h-4 w-4" />
+              </a>
+            </div>
           </div>
 
-          {/* Explore */}
-          <div className="space-y-3">
-            <h4 className="font-semibold text-sm">Explore</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/" className="hover:text-foreground transition-colors">Home</Link></li>
-              <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
-            </ul>
-          </div>
-
-          {/* Submit */}
-          <div className="space-y-3">
-            <h4 className="font-semibold text-sm">Submit</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link></li>
-              <li><Link href="/login" className="hover:text-foreground transition-colors">Login</Link></li>
-              <li><Link href="/register" className="hover:text-foreground transition-colors">Register</Link></li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div className="space-y-3">
-            <h4 className="font-semibold text-sm">Legal</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
-            </ul>
-          </div>
+          {/* Link columns */}
+          {Object.entries(footerLinks).map(([title, links]) => (
+            <div key={title}>
+              <h4 className="text-sm font-semibold text-black">{title}</h4>
+              <ul className="mt-3 space-y-2">
+                {links.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      href={link.href}
+                      className="text-xs text-black/60 transition-colors hover:text-black"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} AI Tools. All rights reserved.
+        {/* Bottom Section */}
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-black/10 pt-6 sm:flex-row">
+          <p className="text-xs text-black/40">
+            © {new Date().getFullYear()} AI Tools. All rights reserved.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link href="/privacy" className="text-xs text-black/40 transition-colors hover:text-black">Privacy</Link>
+            <Link href="/terms" className="text-xs text-black/40 transition-colors hover:text-black">Terms</Link>
+            <Link href="#" className="text-xs text-black/40 transition-colors hover:text-black">Cookies</Link>
+            <Link href="#" className="text-xs text-black/40 transition-colors hover:text-black">Sitemap</Link>
+          </div>
         </div>
       </div>
     </footer>

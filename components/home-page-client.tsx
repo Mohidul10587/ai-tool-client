@@ -43,8 +43,8 @@ import {
 import type { Category } from "@/types/mega-menu";
 import { ToolRow } from "@/components/tool-row";
 import type { ToolRowData } from "@/components/tool-row";
-import { MobileMarqueeAds } from "@/components/mobile-marquee-ads";
-import { Sidebar } from "@/components/sidebar";
+import { FeaturedAdsSidebar } from "@/components/featured-ads-sidebar";
+import Footer from "@/components/footer";
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   All: Layers,
@@ -98,7 +98,13 @@ const COLORS = [
   "bg-indigo-50",
 ];
 
-type Ad = { id: number; url: string; description: string; tool_name: string };
+type Ad = {
+  id: number;
+  url: string;
+  description: string;
+  tool_name: string;
+  logo_url?: string | null;
+};
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export function HomePageClient({
@@ -159,16 +165,12 @@ export function HomePageClient({
 
   return (
     <div className="min-h-screen bg-white relative">
-      <MobileMarqueeAds ads={featuredAds} />
+      <FeaturedAdsSidebar ads={featuredAds} />
 
-      <div className="pb-16 lg:pb-12 flex">
-        <div className="hidden lg:block">
-          <Sidebar ads={featuredAds.slice(0, 10)} />
-        </div>
-
-        <main className="flex-1 pt-10 lg:pt-0 min-w-0">
+      <div className="pb-16 lg:pb-12">
+        <main className="pt-10 lg:pt-0">
           {/* Hero */}
-          <section className="px-4 pb-4 pt-4 text-center">
+          <section className="px-4 pb-4 pt-4 text-center lg:px-56 xl:px-60">
             <h1 className="text-xl font-bold tracking-tight text-black md:text-2xl">
               Discover the Best AI Tools
             </h1>
@@ -197,7 +199,7 @@ export function HomePageClient({
           </section>
 
           {/* Category chips */}
-          <section className="px-4 pb-4">
+          <section className="px-4 pb-4 lg:px-56 xl:px-60">
             <div className="flex flex-wrap justify-center gap-1.5">
               {visibleCats.map((cat) => {
                 const Icon = cat.icon;
@@ -243,7 +245,7 @@ export function HomePageClient({
           </section>
 
           {/* Tools list */}
-          <section className="px-4 pb-16">
+          <section className="px-4 pb-16 lg:px-56 xl:px-60">
             {/* Sort/filter row */}
             <div className="mb-3 flex justify-end gap-1.5 flex-wrap">
               {["newest", "popular", "free", "freemium", "paid"].map((f) => (
@@ -294,10 +296,7 @@ export function HomePageClient({
             )}
           </section>
         </main>
-
-        <div className="hidden lg:block">
-          <Sidebar ads={featuredAds.slice(10, 20)} />
-        </div>
+        <Footer />
       </div>
     </div>
   );

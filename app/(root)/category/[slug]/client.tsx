@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MobileMarqueeAds } from "@/components/mobile-marquee-ads";
-import { Sidebar } from "@/components/sidebar";
+import { FeaturedAdsSidebar } from "@/components/featured-ads-sidebar";
+import Footer from "@/components/footer";
 import { ToolRow } from "@/components/tool-row";
 import type { ToolRowData } from "@/components/tool-row";
 
@@ -21,20 +21,15 @@ export function CategoryPageClient({
   const [displayCount, setDisplayCount] = useState(50);
 
   return (
-    <div className="min-h-screen bg-background">
-      <MobileMarqueeAds ads={featuredAds} />
-
-      <div className="pb-16 lg:pb-12 flex">
-        <div className="hidden lg:block">
-          <Sidebar ads={featuredAds.slice(0, 10)} />
-        </div>
-
-        <div className="flex-1 min-w-0 px-4 py-12">
+    <div className="min-h-screen bg-white relative">
+      <FeaturedAdsSidebar ads={featuredAds} />
+      <div className="pb-16 lg:pb-12">
+        <div className="pt-10 lg:pt-0 px-4 py-12 lg:px-56 xl:px-60">
           <div className="mb-10 text-center">
-            <h1 className="text-4xl font-bold text-foreground mb-3">
+            <h1 className="text-4xl font-bold text-black mb-3">
               {subcategoryName}
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-black/60">
               {tools.length} AI tools for {subcategoryName}
             </p>
           </div>
@@ -56,9 +51,7 @@ export function CategoryPageClient({
           )}
         </div>
 
-        <div className="hidden lg:block">
-          <Sidebar ads={featuredAds.slice(10, 20)} />
-        </div>
+        <Footer />
       </div>
     </div>
   );

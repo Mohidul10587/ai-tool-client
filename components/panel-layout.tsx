@@ -17,6 +17,7 @@ import {
   FolderTree,
   Send,
   FileText,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -79,9 +80,19 @@ const adminNav: NavItem[] = [
     icon: <Inbox size={18} />,
   },
   {
+    label: "Add New Tool",
+    href: "/admin/add-tool",
+    icon: <Plus size={18} />,
+  },
+  {
     label: "Featured Ads",
     href: "/admin/featured-ads",
     icon: <Inbox size={18} />,
+  },
+  {
+    label: "Add Featured Ad",
+    href: "/admin/add-featured-ad",
+    icon: <Plus size={18} />,
   },
   {
     label: "Submission Service",

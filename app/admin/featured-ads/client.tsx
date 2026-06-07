@@ -101,7 +101,6 @@ export default function AdminFeaturedAdsClient({ ads: initial }: { ads: Ad[] }) 
 
   return (
     <div className="p-6">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Featured Ad Requests</h1>
       {!ads.length && <p className="text-gray-500">No requests yet.</p>}
       <div className="space-y-4">
         {ads.map((ad, i) => (

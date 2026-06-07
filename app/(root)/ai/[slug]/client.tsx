@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import {
   ExternalLink,
   Sparkles,
@@ -9,15 +9,12 @@ import {
   Palette,
   Wand2,
   Image as ImageIcon,
-  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { addComment, type CommentRow } from "@/lib/comment-actions";
-import { MobileMarqueeAds } from "@/components/mobile-marquee-ads";
-import { Sidebar } from "@/components/sidebar";
+import { FeaturedAdsSidebar } from "@/components/featured-ads-sidebar";
+import { CommentsSection } from "./comments-section";
+import Footer from "@/components/footer";
 import { VoteButton } from "./vote-button";
-import { CommentItem } from "./comment-item";
 import { PricingCard, ToolInfoCard } from "./tool-sidebar-cards";
 import type { ToolDetailsClientProps } from "./types";
 
@@ -33,48 +30,16 @@ const FEATURE_ICONS = [
 export function ToolDetailsClient({
   tool,
   featuredAds,
-  initialComments,
   currentUser,
   initialUpvotes = 0,
   initialDownvotes = 0,
   initialUserVote = null,
-}: ToolDetailsClientProps) {
-  const [newComment, setNewComment] = useState("");
-  const [comments, setComments] = useState<CommentRow[]>(initialComments);
-  const [error, setError] = useState("");
-  const [pending, startTransition] = useTransition();
-
+}: Omit<ToolDetailsClientProps, "initialComments">) {
   const keyFeatures = tool.key_features ?? [];
   const useCases = tool.use_cases ?? [];
   const pricingInfo = tool.pricing_info;
   const pros = tool.pros ?? [];
   const cons = tool.cons ?? [];
-
-  const handleSubmit = () => {
-    if (!newComment.trim()) return;
-    setError("");
-    startTransition(async () => {
-      const result = await addComment(tool.id, tool.slug!, newComment);
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      const optimistic: CommentRow = {
-        id: crypto.randomUUID(),
-        user_id: currentUser!.id,
-        content: newComment.trim(),
-        created_at: new Date().toISOString(),
-        upvotes: 0,
-        downvotes: 0,
-        profiles: {
-          name: currentUser!.name,
-          avatar_url: currentUser!.avatar_url,
-        },
-      };
-      setComments((prev) => [optimistic, ...prev]);
-      setNewComment("");
-    });
-  };
 
   const voteProps = {
     toolId: tool.id,
@@ -99,11 +64,7 @@ export function ToolDetailsClient({
             onError={() => setImgError(true)}
           />
         ) : (
-          <span
-            className={`text-gray-700 font-bold ${
-              size === "md" ? "text-2xl" : "text-xl"
-            }`}
-          >
+          <span className={`text-gray-700 font-bold ${size === "md" ? "text-2xl" : "text-xl"}`}>
             {tool.name?.[0]}
           </span>
         )}
@@ -113,13 +74,9 @@ export function ToolDetailsClient({
 
   return (
     <div className="min-h-screen bg-white relative">
-      <MobileMarqueeAds ads={featuredAds} />
-      <div className="pb-16 lg:pb-12 flex">
-        <div className="hidden lg:block">
-          <Sidebar ads={featuredAds.slice(0, 10)} />
-        </div>
-
-        <div className="flex-1 min-w-0 px-4 py-8">
+      <FeaturedAdsSidebar ads={featuredAds} />
+      <div className="pb-16 lg:pb-12">
+        <div className="pt-10 lg:pt-0 px-4 py-8 lg:px-56 xl:px-60">
           {/* Header */}
           <div className="mb-8">
             {/* Desktop */}
@@ -162,9 +119,7 @@ export function ToolDetailsClient({
                 <LogoBox size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h1 className="text-xl font-bold text-black">
-                      {tool.name}
-                    </h1>
+                    <h1 className="text-xl font-bold text-black">{tool.name}</h1>
                     {tool.subcategory_snapshot && (
                       <span className="px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded">
                         {tool.subcategory_snapshot.toUpperCase()}
@@ -181,12 +136,7 @@ export function ToolDetailsClient({
               <div className="flex items-center gap-3">
                 <VoteButton {...voteProps} />
                 {tool.url && (
-                  <a
-                    href={tool.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1"
-                  >
+                  <a href={tool.url} target="_blank" rel="noopener noreferrer" className="flex-1">
                     <Button className="bg-black hover:bg-gray-800 text-white px-4 py-2 text-sm font-medium w-full">
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Visit Website
@@ -202,57 +152,34 @@ export function ToolDetailsClient({
             <main className="flex-1 min-w-0">
               {tool.hero_image_url && (
                 <div className="mb-8 aspect-video w-full rounded-xl overflow-hidden border border-gray-200">
-                  <img
-                    src={tool.hero_image_url}
-                    alt={tool.name ?? ""}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={tool.hero_image_url} alt={tool.name ?? ""} className="w-full h-full object-cover" />
                 </div>
               )}
 
               {tool.overview && (
                 <section className="mb-8">
-                  <h2 className="text-lg font-semibold text-black mb-3">
-                    Overview
-                  </h2>
-                  <p className="text-gray-700 leading-relaxed text-sm">
-                    {tool.overview}
-                  </p>
+                  <h2 className="text-lg font-semibold text-black mb-3">Overview</h2>
+                  <p className="text-gray-700 leading-relaxed text-sm">{tool.overview}</p>
                 </section>
               )}
 
               {tool.detail_description && (
                 <section className="mb-8">
-                  <h2 className="text-lg font-semibold text-black mb-3">
-                    Description
-                  </h2>
-                  <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-line">
-                    {tool.detail_description}
-                  </p>
+                  <h2 className="text-lg font-semibold text-black mb-3">Description</h2>
+                  <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-line">{tool.detail_description}</p>
                 </section>
               )}
 
               {keyFeatures.length > 0 && (
                 <section className="mb-8">
-                  <h2 className="text-lg font-semibold text-black mb-4">
-                    Key Features
-                  </h2>
+                  <h2 className="text-lg font-semibold text-black mb-4">Key Features</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {keyFeatures.map((f, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className="shrink-0 mt-0.5 text-gray-600">
-                          {FEATURE_ICONS[i % FEATURE_ICONS.length]}
-                        </div>
+                      <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="shrink-0 mt-0.5 text-gray-600">{FEATURE_ICONS[i % FEATURE_ICONS.length]}</div>
                         <div>
-                          <h3 className="font-medium text-black text-sm mb-0.5">
-                            {f.title}
-                          </h3>
-                          <p className="text-xs text-gray-600">
-                            {f.description}
-                          </p>
+                          <h3 className="font-medium text-black text-sm mb-0.5">{f.title}</h3>
+                          <p className="text-xs text-gray-600">{f.description}</p>
                         </div>
                       </div>
                     ))}
@@ -262,24 +189,13 @@ export function ToolDetailsClient({
 
               {useCases.length > 0 && (
                 <section className="mb-8">
-                  <h2 className="text-lg font-semibold text-black mb-4">
-                    Use Cases
-                  </h2>
+                  <h2 className="text-lg font-semibold text-black mb-4">Use Cases</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {useCases.map((u, i) => (
-                      <div
-                        key={i}
-                        className="bg-gray-50 border border-gray-200 rounded-xl p-4"
-                      >
-                        <h3 className="font-semibold text-black text-sm mb-1">
-                          {u.title}
-                        </h3>
-                        <p className="text-xs text-gray-500 mb-2">
-                          {u.audience}
-                        </p>
-                        <p className="text-xs text-gray-600 leading-relaxed">
-                          {u.description}
-                        </p>
+                      <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                        <h3 className="font-semibold text-black text-sm mb-1">{u.title}</h3>
+                        <p className="text-xs text-gray-500 mb-2">{u.audience}</p>
+                        <p className="text-xs text-gray-600 leading-relaxed">{u.description}</p>
                       </div>
                     ))}
                   </div>
@@ -288,44 +204,30 @@ export function ToolDetailsClient({
 
               {(pros.length > 0 || cons.length > 0) && (
                 <section className="mb-8">
-                  <h2 className="text-lg font-semibold text-black mb-4">
-                    Pros & Cons
-                  </h2>
+                  <h2 className="text-lg font-semibold text-black mb-4">Pros & Cons</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                       <h3 className="font-semibold text-black text-sm mb-3 flex items-center gap-2">
-                        <span className="w-5 h-5 bg-black text-white rounded-full flex items-center justify-center text-xs">
-                          +
-                        </span>
+                        <span className="w-5 h-5 bg-black text-white rounded-full flex items-center justify-center text-xs">+</span>
                         Pros
                       </h3>
                       <ul className="space-y-2">
                         {pros.map((p, i) => (
-                          <li
-                            key={i}
-                            className="flex items-start gap-2 text-sm text-gray-700"
-                          >
-                            <span className="text-gray-400 mt-0.5">•</span>
-                            {p}
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                            <span className="text-gray-400 mt-0.5">•</span>{p}
                           </li>
                         ))}
                       </ul>
                     </div>
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                       <h3 className="font-semibold text-black text-sm mb-3 flex items-center gap-2">
-                        <span className="w-5 h-5 bg-gray-400 text-white rounded-full flex items-center justify-center text-xs">
-                          −
-                        </span>
+                        <span className="w-5 h-5 bg-gray-400 text-white rounded-full flex items-center justify-center text-xs">−</span>
                         Cons
                       </h3>
                       <ul className="space-y-2">
                         {cons.map((c, i) => (
-                          <li
-                            key={i}
-                            className="flex items-start gap-2 text-sm text-gray-700"
-                          >
-                            <span className="text-gray-400 mt-0.5">•</span>
-                            {c}
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                            <span className="text-gray-400 mt-0.5">•</span>{c}
                           </li>
                         ))}
                       </ul>
@@ -335,65 +237,11 @@ export function ToolDetailsClient({
               )}
 
               {/* Community Discussion */}
-              <section className="mb-8">
-                <h2 className="text-lg font-semibold text-black mb-4">
-                  Community Discussion
-                </h2>
-                {currentUser ? (
-                  <div className="mb-4 relative">
-                    <Textarea
-                      placeholder="Leave a comment..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
-                          handleSubmit();
-                      }}
-                      className="min-h-[80px] resize-none pr-12 text-sm"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={handleSubmit}
-                      disabled={pending || !newComment.trim()}
-                      className="absolute bottom-2 right-2 bg-black hover:bg-gray-800 text-white h-8 w-8 p-0"
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                    </Button>
-                    {error && (
-                      <p className="text-xs text-red-500 mt-1">{error}</p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 mb-4">
-                    <a
-                      href="/login"
-                      className="text-black font-medium underline"
-                    >
-                      Log in
-                    </a>{" "}
-                    to leave a comment.
-                  </p>
-                )}
-                <div className="bg-white border border-gray-200 rounded-xl p-4">
-                  {comments.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-4">
-                      No comments yet. Be the first!
-                    </p>
-                  ) : (
-                    comments.map((c) => (
-                      <CommentItem
-                        key={c.id}
-                        comment={c}
-                        currentUserId={currentUser?.id ?? null}
-                        toolSlug={tool.slug!}
-                        onDelete={(id) =>
-                          setComments((prev) => prev.filter((x) => x.id !== id))
-                        }
-                      />
-                    ))
-                  )}
-                </div>
-              </section>
+              <CommentsSection
+                toolId={tool.id}
+                toolSlug={tool.slug!}
+                currentUser={currentUser}
+              />
 
               <div className="lg:hidden space-y-4">
                 {pricingInfo && <PricingCard pricingInfo={pricingInfo} />}
@@ -409,11 +257,8 @@ export function ToolDetailsClient({
             </aside>
           </div>
         </div>
-
-        <div className="hidden lg:block">
-          <Sidebar ads={featuredAds.slice(10, 20)} />
-        </div>
       </div>
+      <Footer />
     </div>
   );
 }
