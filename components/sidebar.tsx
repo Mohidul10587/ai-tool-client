@@ -7,7 +7,7 @@ type Ad = {
   url: string;
   description: string;
   tool_name: string;
-  logo_url?: string;
+  logo_url?: string | null;
 };
 
 const BG_COLORS = [

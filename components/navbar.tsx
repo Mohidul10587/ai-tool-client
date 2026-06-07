@@ -8,18 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { User } from "@supabase/supabase-js";
 import type { Category } from "@/types/mega-menu";
 
-const featuredAds = [
-  { id: 1, name: "AdTech AI", color: "bg-rose-50" },
-  { id: 2, name: "BrandBot", color: "bg-sky-50" },
-  { id: 3, name: "CloudAI Pro", color: "bg-amber-50" },
-  { id: 4, name: "DataMind", color: "bg-emerald-50" },
-  { id: 5, name: "EdgeAI", color: "bg-violet-50" },
-  { id: 6, name: "FlowAI", color: "bg-pink-50" },
-  { id: 7, name: "GenAI Studio", color: "bg-cyan-50" },
-  { id: 8, name: "HyperWrite", color: "bg-orange-50" },
-  { id: 9, name: "InsightAI", color: "bg-lime-50" },
-  { id: 10, name: "JetBot", color: "bg-indigo-50" },
-];
 
 function MegaMenuDropdown({ isOpen, categories }: { isOpen: boolean; categories: Category[] }) {
   if (!isOpen) return null;
@@ -98,7 +86,7 @@ function MobileMegaMenu({ isOpen, onClose, categories }: { isOpen: boolean; onCl
   );
 }
 
-export default function Navbar() {
+export default function Navbar({ featuredAds = [] }: { featuredAds?: { id: number; tool_name: string; url: string; logo_url?: string | null }[] }) {
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false);
@@ -199,17 +187,29 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div className="overflow-hidden border-t border-black/5 bg-white py-2 lg:hidden">
-        <div className="marquee-container flex">
-          <div className="marquee-content flex animate-marquee gap-3">
-            {[...featuredAds, ...featuredAds].map((ad, index) => (
-              <a key={`${ad.id}-${index}`} href="#" className={`flex h-9 min-w-[130px] items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold text-black shadow-sm ${ad.color}`}>
-                {ad.name}
-              </a>
-            ))}
+      {featuredAds.length > 0 && (
+        <div className="overflow-hidden border-t border-black/5 bg-white py-2 lg:hidden">
+          <div className="marquee-container flex">
+            <div className="marquee-content flex animate-marquee gap-3">
+              {[...featuredAds, ...featuredAds].filter(ad => ad.tool_name).map((ad, index) => (
+                <a key={`${ad.id}-${index}`} href={ad.url} target="_blank" rel="noopener noreferrer sponsored"
+                  className="flex h-9 items-center gap-2 whitespace-nowrap rounded-lg border border-black/10 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-black">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-black/10 overflow-hidden">
+                    {ad.logo_url ? (
+                      <img src={ad.logo_url} alt={ad.tool_name} className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-[9px] font-bold text-black/70">
+                        {ad.tool_name.split(" ").filter(w => /^[a-zA-Z]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "AD"}
+                      </span>
+                    )}
+                  </div>
+                  {ad.tool_name}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {isMobileMenuOpen && (
         <div className="absolute left-0 right-0 top-full z-50 border-t border-black/10 bg-white shadow-lg md:hidden">

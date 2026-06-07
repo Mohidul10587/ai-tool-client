@@ -2,11 +2,25 @@
 
 import { useRef } from "react";
 
-type Ad = { id: number; url: string; description: string; tool_name: string };
+type Ad = {
+  id: number;
+  url: string;
+  description: string;
+  tool_name: string;
+  logo_url?: string | null;
+};
 
 const COLORS = [
-  "bg-rose-50", "bg-sky-50", "bg-amber-50", "bg-emerald-50", "bg-violet-50",
-  "bg-pink-50", "bg-cyan-50", "bg-orange-50", "bg-lime-50", "bg-indigo-50",
+  "bg-rose-50",
+  "bg-sky-50",
+  "bg-amber-50",
+  "bg-emerald-50",
+  "bg-violet-50",
+  "bg-pink-50",
+  "bg-cyan-50",
+  "bg-orange-50",
+  "bg-lime-50",
+  "bg-indigo-50",
 ];
 
 export function MobileMarquee({ ads }: { ads: Ad[] }) {
@@ -14,7 +28,7 @@ export function MobileMarquee({ ads }: { ads: Ad[] }) {
 
   if (!ads.length) return null;
 
-  const items = [...ads, ...ads];
+  const items = [...ads, ...ads]; // Duplicate for seamless loop
 
   return (
     <div className="overflow-hidden">
@@ -29,12 +43,31 @@ export function MobileMarquee({ ads }: { ads: Ad[] }) {
             href={ad.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            className={`flex shrink-0 items-center gap-2 rounded-lg border border-black/10 px-3 py-1.5 ${COLORS[i % COLORS.length]}`}
+            className={`flex shrink-0 items-center gap-2 rounded-lg border border-black/10 px-3 py-1.5 ${
+              COLORS[i % COLORS.length]
+            }`}
           >
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-black/10 text-[9px] font-bold text-black/70">
-              {(ad.tool_name || ad.description).split(" ").slice(0,2).map(w=>w[0]?.toUpperCase()??"").join("") || "AD"}
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-black/10 overflow-hidden">
+              {ad.logo_url ? (
+                <img
+                  src={ad.logo_url}
+                  alt={ad.tool_name}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <span className="text-[9px] font-bold text-black/70">
+                  {(ad.tool_name || ad.description)
+                    .split(" ")
+                    .filter((w) => /^[a-zA-Z]/.test(w))
+                    .slice(0, 2)
+                    .map((w) => w[0].toUpperCase())
+                    .join("") || "AD"}
+                </span>
+              )}
             </div>
-            <span className="whitespace-nowrap text-xs font-semibold text-black">{ad.tool_name || ad.description}</span>
+            <span className="whitespace-nowrap text-xs font-semibold text-black">
+              {ad.tool_name || ad.description}
+            </span>
           </a>
         ))}
       </div>

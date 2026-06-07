@@ -1,6 +1,6 @@
 import type { CommentRow } from "@/lib/comment-actions";
 
-export type Ad = { id: number; url: string; description: string };
+export type Ad = { id: number; url: string; description: string; tool_name: string; logo_url?: string | null };
 
 export type Tool = {
   id: string;

@@ -43,7 +43,7 @@ import {
 import type { Category } from "@/types/mega-menu";
 import { ToolRow } from "@/components/tool-row";
 import type { ToolRowData } from "@/components/tool-row";
-import { FeaturedAdsSidebar } from "@/components/featured-ads-sidebar";
+import { MobileMarqueeAds } from "@/components/mobile-marquee-ads";
 import { Sidebar } from "@/components/sidebar";
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -159,7 +159,7 @@ export function HomePageClient({
 
   return (
     <div className="min-h-screen bg-white relative">
-      <FeaturedAdsSidebar ads={featuredAds} />
+      <MobileMarqueeAds ads={featuredAds} />
 
       <div className="pb-16 lg:pb-12 flex">
         <div className="hidden lg:block">
@@ -265,7 +265,9 @@ export function HomePageClient({
                       : "border border-black/10 bg-black/5 text-black/70 hover:border-black/20 hover:text-black"
                   }`}
                 >
-                  {f === "newest" ? "Newest" : f.charAt(0).toUpperCase() + f.slice(1)}
+                  {f === "newest"
+                    ? "Newest"
+                    : f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}
             </div>

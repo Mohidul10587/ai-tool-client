@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FeaturedAdsSidebar } from "@/components/featured-ads-sidebar";
+import { MobileMarqueeAds } from "@/components/mobile-marquee-ads";
 import { Sidebar } from "@/components/sidebar";
 import { ToolRow } from "@/components/tool-row";
 import type { ToolRowData } from "@/components/tool-row";
@@ -22,7 +22,7 @@ export function CategoryPageClient({
 
   return (
     <div className="min-h-screen bg-background">
-      <FeaturedAdsSidebar ads={featuredAds} />
+      <MobileMarqueeAds ads={featuredAds} />
 
       <div className="pb-16 lg:pb-12 flex">
         <div className="hidden lg:block">
