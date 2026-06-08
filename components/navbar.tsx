@@ -86,7 +86,7 @@ function MobileMegaMenu({ isOpen, onClose, categories }: { isOpen: boolean; onCl
   );
 }
 
-export default function Navbar({ featuredAds = [] }: { featuredAds?: { id: number; tool_name: string; url: string; logo_url?: string | null }[] }) {
+export default function Navbar({ featuredAds = [], logoUrl = "" }: { featuredAds?: { id: number; tool_name: string; url: string; logo_url?: string | null }[]; logoUrl?: string }) {
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false);
@@ -139,10 +139,17 @@ export default function Navbar({ featuredAds = [] }: { featuredAds?: { id: numbe
     <nav className="sticky top-0 z-50 border-b border-black/10 bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-56 xl:px-60">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-base font-bold text-black">AI Directory</span>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="Logo" className="h-8 max-w-[140px] object-contain" />
+          ) : (
+            <>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black">
+                <Zap className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-base font-bold text-black">AI Directory</span>
+            </>
+          )}
         </Link>
 
         <div ref={menuRef} className="relative hidden items-center gap-6 md:flex">

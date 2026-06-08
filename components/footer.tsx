@@ -37,10 +37,17 @@ export default async function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black">
-                <Zap className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-base font-bold text-black">AI Tools</span>
+              {settings.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={settings.logo_url} alt="Logo" className="h-8 max-w-[140px] object-contain" />
+              ) : (
+                <>
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black">
+                    <Zap className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-base font-bold text-black">AI Tools</span>
+                </>
+              )}
             </Link>
             <p className="mt-3 max-w-xs text-xs text-black/60">
               The largest directory of AI tools. Discover, compare, and find the best AI solutions for your needs.
@@ -117,7 +124,7 @@ export default async function Footer() {
             <Link href="/privacy" className="text-xs text-black/40 transition-colors hover:text-black">Privacy</Link>
             <Link href="/terms" className="text-xs text-black/40 transition-colors hover:text-black">Terms</Link>
             <Link href="/cookie-policy" className="text-xs text-black/40 transition-colors hover:text-black">Cookies</Link>
-            <Link href="#" className="text-xs text-black/40 transition-colors hover:text-black">Sitemap</Link>
+            <Link href="/sitemap-page" className="text-xs text-black/40 transition-colors hover:text-black">Sitemap</Link>
           </div>
         </div>
       </div>

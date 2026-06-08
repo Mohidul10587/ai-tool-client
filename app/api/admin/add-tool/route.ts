@@ -45,19 +45,35 @@ export async function POST(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
+    // Ensure slug exists; generate and deduplicate if missing
+    let finalSlug = slug?.trim() ||
+      name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+    let counter = 1;
+    let candidate = finalSlug;
+    while (true) {
+      const { data: existing } = await adminClient
+        .from("tool_submissions")
+        .select("id")
+        .eq("slug", candidate)
+        .maybeSingle();
+      if (!existing) { finalSlug = candidate; break; }
+      candidate = `${finalSlug}-${counter++}`;
+    }
+
     // Insert the tool directly to tools table (bypassing submission process)
     const { data: tool, error: toolError } = await adminClient
       .from("tool_submissions")
       .insert({
         name,
         url,
-        slug,
+        slug: finalSlug,
         overview,
         short_description,
         detail_description,
         category_id: parseInt(category_id),
         subcategory_id: subcategory_id ? parseInt(subcategory_id) : null,
-        pricing,
+        pricing: pricing || "Free",
         platform,
         logo_url,
         hero_image_url,
