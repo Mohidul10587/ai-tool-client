@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = "https://ai-tool-client-xcmm.vercel.app";
+  const base = process.env.NEXT_PUBLIC_SITE_URL;
 
   const staticRoutes = [
     { url: "/", priority: 1 },
@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data: tools } = await admin
     .from("tool_submissions")
     .select("slug, updated_at")
-    .eq("status", "published");
+    .eq("status", "approved");
 
   const toolRoutes: MetadataRoute.Sitemap = (tools ?? []).map((tool) => ({
     url: `${base}/ai/${tool.slug}`,
