@@ -13,6 +13,7 @@ export async function saveSiteSettings(formData: FormData) {
     "site_title", "site_description", "site_keywords",
     "logo_url", "favicon_url", "og_image_url",
     "twitter_handle", "google_verification", "footer_text",
+    "social_twitter", "social_facebook", "social_linkedin", "social_email",
   ];
 
   const rows = keys.map((key) => ({

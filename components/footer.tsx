@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Zap, Mail } from "lucide-react";
 import { Linkedin } from "lucide-react";
+import { getSiteSettings } from "@/lib/site-settings";
 
 const footerLinks = {
   Product: [
@@ -10,22 +11,24 @@ const footerLinks = {
   Resources: [
     { name: "Blog", href: "#" },
     { name: "Newsletter", href: "#" },
-    { name: "FAQ", href: "#" },
+    { name: "FAQ", href: "/faq" },
   ],
   Company: [
     { name: "About Us", href: "#" },
-    { name: "Contact", href: "#" },
+    { name: "Contact", href: "/contact" },
   ],
   Legal: [
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Terms of Service", href: "/terms" },
-    { name: "Cookie Policy", href: "#" },
-    { name: "DMCA", href: "#" },
-    { name: "Disclaimer", href: "#" },
+    { name: "Cookie Policy", href: "/cookie-policy" },
+    { name: "DMCA", href: "/dmca" },
+    { name: "Disclaimer", href: "/disclaimer" },
   ],
 };
 
-export default function Footer() {
+export default async function Footer() {
+  const settings = await getSiteSettings();
+
   return (
     <footer className="border-t border-black/10 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-10 lg:px-56 xl:px-60">
@@ -46,7 +49,9 @@ export default function Footer() {
             <div className="mt-4 flex gap-3">
               {/* X (Twitter) */}
               <a
-                href="#"
+                href={settings.social_twitter || "#"}
+                target={settings.social_twitter ? "_blank" : undefined}
+                rel="noopener noreferrer"
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-black/5 text-black/60 transition-all hover:bg-black/10 hover:text-black"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -55,7 +60,9 @@ export default function Footer() {
               </a>
               {/* Facebook */}
               <a
-                href="#"
+                href={settings.social_facebook || "#"}
+                target={settings.social_facebook ? "_blank" : undefined}
+                rel="noopener noreferrer"
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-black/5 text-black/60 transition-all hover:bg-black/10 hover:text-black"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -64,14 +71,16 @@ export default function Footer() {
               </a>
               {/* LinkedIn */}
               <a
-                href="#"
+                href={settings.social_linkedin || "#"}
+                target={settings.social_linkedin ? "_blank" : undefined}
+                rel="noopener noreferrer"
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-black/5 text-black/60 transition-all hover:bg-black/10 hover:text-black"
               >
                 <Linkedin className="h-4 w-4" />
               </a>
               {/* Email */}
               <a
-                href="mailto:contact@aitools.com"
+                href={settings.social_email ? `mailto:${settings.social_email}` : "mailto:contact@aitools.com"}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-black/5 text-black/60 transition-all hover:bg-black/10 hover:text-black"
               >
                 <Mail className="h-4 w-4" />
@@ -107,7 +116,7 @@ export default function Footer() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/privacy" className="text-xs text-black/40 transition-colors hover:text-black">Privacy</Link>
             <Link href="/terms" className="text-xs text-black/40 transition-colors hover:text-black">Terms</Link>
-            <Link href="#" className="text-xs text-black/40 transition-colors hover:text-black">Cookies</Link>
+            <Link href="/cookie-policy" className="text-xs text-black/40 transition-colors hover:text-black">Cookies</Link>
             <Link href="#" className="text-xs text-black/40 transition-colors hover:text-black">Sitemap</Link>
           </div>
         </div>

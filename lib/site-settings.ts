@@ -10,6 +10,10 @@ export type SiteSettings = {
   twitter_handle: string;
   google_verification: string;
   footer_text: string;
+  social_twitter: string;
+  social_facebook: string;
+  social_linkedin: string;
+  social_email: string;
 };
 
 const DEFAULTS: SiteSettings = {
@@ -22,6 +26,10 @@ const DEFAULTS: SiteSettings = {
   twitter_handle: "@aidirectory",
   google_verification: "",
   footer_text: "© 2026 AI Directory. All rights reserved.",
+  social_twitter: "",
+  social_facebook: "",
+  social_linkedin: "",
+  social_email: "",
 };
 
 export async function getSiteSettings(): Promise<SiteSettings> {

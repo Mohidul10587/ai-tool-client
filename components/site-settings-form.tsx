@@ -30,6 +30,15 @@ const textSections = [
       { key: "google_verification", label: "Google Site Verification Code", type: "input" },
     ],
   },
+  {
+    title: "Social Links",
+    fields: [
+      { key: "social_twitter", label: "Twitter / X URL", type: "input", placeholder: "https://twitter.com/yourhandle" },
+      { key: "social_facebook", label: "Facebook URL", type: "input", placeholder: "https://facebook.com/yourpage" },
+      { key: "social_linkedin", label: "LinkedIn URL", type: "input", placeholder: "https://linkedin.com/company/yourpage" },
+      { key: "social_email", label: "Contact Email", type: "input", placeholder: "contact@yourdomain.com" },
+    ],
+  },
 ];
 
 async function uploadFile(file: File): Promise<string> {
