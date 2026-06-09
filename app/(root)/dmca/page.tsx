@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "DMCA Policy",
+  description: "AI Directory DMCA policy — how to report copyright infringement and file counter-notices.",
+};
+
 export default function DMCAPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-16 space-y-8 text-sm text-foreground">

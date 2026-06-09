@@ -2,6 +2,18 @@ import { createClient } from "@/lib/supabase/server";
 import { getApprovedFeaturedAds } from "@/lib/featured-ads-actions";
 import { CategoryPageClient } from "./client";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.from("subcategories").select("name").eq("slug", slug).single();
+  if (!data) return {};
+  return {
+    title: `${data.name} AI Tools`,
+    description: `Browse the best ${data.name} AI tools. Discover, compare and find the right AI tool for your needs.`,
+  };
+}
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

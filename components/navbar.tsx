@@ -12,7 +12,7 @@ import type { Category } from "@/types/mega-menu";
 function MegaMenuDropdown({ isOpen, categories }: { isOpen: boolean; categories: Category[] }) {
   if (!isOpen) return null;
   return (
-    <div className="absolute left-1/2 top-full z-50 mt-2 w-[800px] -translate-x-1/2 rounded-xl border border-black/10 bg-white p-6 shadow-xl">
+    <div className="absolute left-1/2 top-full z-[9999] mt-2 w-[800px] -translate-x-1/2 rounded-xl border border-black/10 bg-white p-6 shadow-xl">
       <div className="grid grid-cols-6 gap-6">
         {categories.map((category) => (
           <div key={category.id}>
@@ -86,6 +86,8 @@ function MobileMegaMenu({ isOpen, onClose, categories }: { isOpen: boolean; onCl
   );
 }
 
+const supabase = createClient();
+
 export default function Navbar({ featuredAds = [], logoUrl = "" }: { featuredAds?: { id: number; tool_name: string; url: string; logo_url?: string | null }[]; logoUrl?: string }) {
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -95,28 +97,58 @@ export default function Navbar({ featuredAds = [], logoUrl = "" }: { featuredAds
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    let mounted = true;
+    
+    const getUser = async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (mounted) setUser(data.user);
+      } catch (error) {
+        console.error('Error getting user:', error);
+      }
+    };
+    
+    getUser();
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
+      if (mounted) setUser(session?.user ?? null);
     });
-    return () => subscription.unsubscribe();
+    
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("categories")
-      .select("*, subcategories(*)")
-      .order("display_order")
-      .then(({ data }) => {
-        if (data) {
+    let mounted = true;
+    
+    const getCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("categories")
+          .select("*, subcategories(*)")
+          .order("display_order");
+          
+        if (error) throw error;
+        
+        if (data && mounted) {
+          console.log("Categories loaded:", data.length);
           setCategories(data.map(cat => ({
             ...cat,
             subcategories: cat.subcategories.sort((a, b) => a.display_order - b.display_order)
           })));
         }
-      });
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    
+    getCategories();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -132,6 +164,7 @@ export default function Navbar({ featuredAds = [], logoUrl = "" }: { featuredAds
   const toggleMegaMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log("Toggle mega menu clicked, current state:", isMegaMenuOpen);
     setIsMegaMenuOpen((prev) => !prev);
   };
 

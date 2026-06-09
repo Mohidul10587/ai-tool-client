@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "Read the AI Directory Terms of Service — rules for using the platform, submitting tools, and paid services.",
+};
+
 export default function TermsOfServicePage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-16 space-y-8 text-sm text-foreground">

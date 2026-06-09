@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Disclaimer",
+  description: "AI Directory disclaimer — information accuracy, third-party content, affiliate links, and limitation of liability.",
+};
+
 export default function DisclaimerPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-16 space-y-8 text-sm text-foreground">

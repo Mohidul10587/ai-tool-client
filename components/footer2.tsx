@@ -28,7 +28,7 @@ const footerLinks = {
   ],
 };
 
-export default function Footer() {
+export default function Footer2() {
   const [settings, setSettings] = useState<any>({});
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-black/10 bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-10 lg:px-56 xl:px-60">
+      <div className=" px-4 py-10 lg:px-56 xl:px-60">
         {/* Top Section */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand */}

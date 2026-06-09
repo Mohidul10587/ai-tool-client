@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sitemap",
+  description: "A complete list of all pages available on AI Directory.",
+};
+
 export default function SitemapPage() {
   const sections = [
     {

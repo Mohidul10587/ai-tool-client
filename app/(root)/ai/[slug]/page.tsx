@@ -2,6 +2,31 @@ import { createClient } from "@/lib/supabase/server";
 import { getApprovedFeaturedAds } from "@/lib/featured-ads-actions";
 import { ToolDetailsClient } from "./client";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+
+  const { data: tool } = await supabase
+    .from("tool_submissions")
+    .select("name, short_description, logo_url")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
+
+  if (!tool) return {};
+
+  return {
+    title: tool.name,
+    description: tool.short_description,
+    openGraph: {
+      title: tool.name,
+      description: tool.short_description,
+      images: tool.logo_url ? [tool.logo_url] : [],
+    },
+  };
+}
 
 export default async function ToolPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

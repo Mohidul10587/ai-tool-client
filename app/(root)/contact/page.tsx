@@ -1,5 +1,11 @@
 import { getSiteSettings } from "@/lib/site-settings";
 import { Mail, Twitter, Facebook, Linkedin } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact",
+  description: "Get in touch with the AI Directory team for tool submissions, partnerships, advertising, or general enquiries.",
+};
 
 export default async function ContactPage() {
   const settings = await getSiteSettings();

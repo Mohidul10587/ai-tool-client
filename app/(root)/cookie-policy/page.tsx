@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cookie Policy",
+  description: "Learn how AI Directory uses cookies to keep you signed in and improve your experience.",
+};
+
 export default function CookiePolicyPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-16 space-y-8 text-sm text-foreground">

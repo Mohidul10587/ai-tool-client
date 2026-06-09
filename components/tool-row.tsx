@@ -122,11 +122,11 @@ export function ToolRow({ tool }: { tool: ToolRowData }) {
         </p>
       </div>
       <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          window.open(`/ai/${tool.slug}`, "_blank");
-        }}
+        // onClick={(e) => {
+        //   e.preventDefault();
+        //   e.stopPropagation();
+        //   window.open(`/ai/${tool.slug}`, "_blank");
+        // }}
         aria-label="Open in new tab"
         className="hidden shrink-0 items-center justify-center rounded-lg border border-black/10 bg-black/5 p-2 opacity-0 transition-all hover:bg-black hover:text-white group-hover:opacity-100 md:flex"
       >

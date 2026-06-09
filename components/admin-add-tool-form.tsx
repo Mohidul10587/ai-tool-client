@@ -7,509 +7,278 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { X, Plus, Upload } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import type { Category } from "@/types/mega-menu";
 
-interface Category {
-  id: number;
-  name: string;
-  subcategories?: { id: number; name: string }[];
+type FormData = {
+  name: string; url: string; slug: string; platform: string;
+  category_id: string; subcategory_id: string;
+  category_snapshot: string; subcategory_snapshot: string;
+  pricing: string; overview: string; short_description: string; detail_description: string;
+  logo_url: string; hero_image_url: string;
+  pricing_info: { model: string; paidFrom: string; billingFrequency: string; freeTrial: string };
+  key_features: { title: string; description: string }[];
+  use_cases: { title: string; audience: string; description: string }[];
+  pros: string[]; cons: string[]; tags: string;
+};
+
+const EMPTY: FormData = {
+  name: "", url: "", slug: "", platform: "",
+  category_id: "", subcategory_id: "",
+  category_snapshot: "", subcategory_snapshot: "",
+  pricing: "Free", overview: "", short_description: "", detail_description: "",
+  logo_url: "", hero_image_url: "",
+  pricing_info: { model: "", paidFrom: "", billingFrequency: "", freeTrial: "" },
+  key_features: [], use_cases: [], pros: [], cons: [], tags: "",
+};
+
+async function uploadImage(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch("/api/upload", { method: "POST", body: fd });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? "Upload failed");
+  return json.url as string;
 }
 
 export function AdminAddToolForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState<FormData>(EMPTY);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [logoPreview, setLogoPreview] = useState("");
   const [heroFile, setHeroFile] = useState<File | null>(null);
-  const [heroPreview, setHeroPreview] = useState<string>("");
+  const [heroPreview, setHeroPreview] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const logoRef = useRef<HTMLInputElement>(null);
   const heroRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    url: "",
-    slug: "",
-    overview: "",
-    short_description: "",
-    detail_description: "",
-    category_id: "",
-    subcategory_id: "",
-    pricing: "Free",
-    platform: "",
-    logo_url: "",
-    hero_image_url: "",
-    pricing_info: {
-      model: "",
-      paidFrom: "",
-      billingFrequency: "",
-      freeTrial: ""
-    },
-    key_features: [{ title: "", description: "" }],
-    use_cases: [{ title: "", audience: "", description: "" }],
-    pros: [""],
-    cons: [""],
-    tags: [""]
-  });
-
   useEffect(() => {
-    fetch("/api/categories")
-      .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(err => console.error("Failed to load categories:", err));
+    const supabase = createClient();
+    supabase.from("categories").select("*, subcategories(*)").order("display_order")
+      .then(({ data }) => { if (data) setCategories(data); });
   }, []);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Auto-generate slug from name
-    if (field === "name") {
-      const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      setFormData(prev => ({ ...prev, slug }));
-    }
-  };
+  function update(patch: Partial<FormData>) {
+    setForm(prev => ({ ...prev, ...patch }));
+  }
 
-  const handlePricingInfoChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      pricing_info: { ...prev.pricing_info, [field]: value }
-    }));
-  };
+  function handleNameChange(name: string) {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    update({ name, slug });
+  }
 
-  const handleArrayChange = (field: "key_features" | "use_cases" | "pros" | "cons" | "tags", index: number, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].map((item, i) => i === index ? value : item)
-    }));
-  };
+  function handleCategoryChange(categoryId: string) {
+    const cat = categories.find(c => c.id === parseInt(categoryId));
+    setSelectedCategory(cat || null);
+    update({ category_id: categoryId, subcategory_id: "", category_snapshot: cat?.name ?? "", subcategory_snapshot: "" });
+  }
 
-  const addArrayItem = (field: "key_features" | "use_cases" | "pros" | "cons" | "tags") => {
-    const newItem = field === "key_features" 
-      ? { title: "", description: "" }
-      : field === "use_cases"
-      ? { title: "", audience: "", description: "" }
-      : "";
-    
-    setFormData(prev => ({
-      ...prev,
-      [field]: [...prev[field], newItem]
-    }));
-  };
+  function handleSubcategoryChange(subcategoryId: string) {
+    const sub = selectedCategory?.subcategories?.find(s => s.id === parseInt(subcategoryId));
+    update({ subcategory_id: subcategoryId, subcategory_snapshot: sub?.name ?? "" });
+  }
 
-  const removeArrayItem = (field: "key_features" | "use_cases" | "pros" | "cons" | "tags", index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
-  };
-
-  const handleHeroSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setHeroFile(file);
-    setHeroPreview(URL.createObjectURL(file));
-  };
-
-  const uploadImage = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append("file", file);
-    
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData
-    });
-    
-    if (!response.ok) {
-      throw new Error("Failed to upload image");
-    }
-    
-    const data = await response.json();
-    return data.url;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError(null);
-
     try {
-      let logo_url = formData.logo_url;
-      let hero_image_url = formData.hero_image_url;
-      
-      // Upload images if selected
-      if (logoFile) {
-        logo_url = await uploadImage(logoFile);
-      }
-      if (heroFile) {
-        hero_image_url = await uploadImage(heroFile);
-      }
-
-      const payload = {
-        ...formData,
-        logo_url,
-        hero_image_url,
-        category_id: parseInt(formData.category_id),
-        subcategory_id: formData.subcategory_id ? parseInt(formData.subcategory_id) : null,
-        pros: formData.pros.filter(Boolean),
-        cons: formData.cons.filter(Boolean),
-        tags: formData.tags.filter(Boolean),
-        key_features: formData.key_features.filter(f => f.title && f.description),
-        use_cases: formData.use_cases.filter(u => u.title && u.description),
-        status: "published"
-      };
+      let logo_url = form.logo_url;
+      let hero_image_url = form.hero_image_url;
+      if (logoFile) logo_url = await uploadImage(logoFile);
+      if (heroFile) hero_image_url = await uploadImage(heroFile);
 
       const res = await fetch("/api/admin/add-tool", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          ...form,
+          logo_url, hero_image_url,
+          category_id: parseInt(form.category_id),
+          subcategory_id: form.subcategory_id ? parseInt(form.subcategory_id) : null,
+          pros: form.pros.filter(Boolean),
+          cons: form.cons.filter(Boolean),
+          tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
+          key_features: form.key_features.filter(f => f.title),
+          use_cases: form.use_cases.filter(u => u.title),
+          status: "published",
+        }),
       });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to add tool");
-      }
-
+      if (!res.ok) { const j = await res.json(); throw new Error(j.error || "Failed"); }
       router.push("/admin/tool-submissions");
       router.refresh();
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
-  };
-
-  const selectedCategory = categories.find(c => c.id === parseInt(formData.category_id));
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-sm text-red-600">{error}</p>
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-4xl">
+      {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
+
+      {/* Basic */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label>Tool Name *</Label>
+          <Input value={form.name} onChange={e => handleNameChange(e.target.value)} required />
         </div>
-      )}
+        <div className="space-y-1">
+          <Label>URL *</Label>
+          <Input type="url" value={form.url} onChange={e => update({ url: e.target.value })} required />
+        </div>
+        <div className="space-y-1">
+          <Label>Slug</Label>
+          <Input value={form.slug} onChange={e => update({ slug: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label>Platform</Label>
+          <Input value={form.platform} onChange={e => update({ platform: e.target.value })} placeholder="Web, Mobile, Desktop" />
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Tool Name *</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Enter tool name"
-                required
-              />
-            </div>
-            <div>
-              <Label>URL *</Label>
-              <Input
-                type="url"
-                value={formData.url}
-                onChange={(e) => handleInputChange("url", e.target.value)}
-                placeholder="https://example.com"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Slug</Label>
-              <Input
-                value={formData.slug}
-                onChange={(e) => handleInputChange("slug", e.target.value)}
-                placeholder="auto-generated-from-name"
-              />
-            </div>
-            <div>
-              <Label>Platform</Label>
-              <Input
-                value={formData.platform}
-                onChange={(e) => handleInputChange("platform", e.target.value)}
-                placeholder="Web, Mobile, Desktop"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Category *</Label>
-              <Select value={formData.category_id} onValueChange={(value) => handleInputChange("category_id", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(cat => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Subcategory</Label>
-              <Select 
-                value={formData.subcategory_id} 
-                onValueChange={(value) => handleInputChange("subcategory_id", value)}
-                disabled={!selectedCategory?.subcategories?.length}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select subcategory" />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedCategory?.subcategories?.map(sub => (
-                    <SelectItem key={sub.id} value={sub.id.toString()}>{sub.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <Label>Short Description *</Label>
-            <Textarea
-              value={formData.short_description}
-              onChange={(e) => handleInputChange("short_description", e.target.value)}
-              placeholder="Brief description of the tool"
-              rows={2}
-              required
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Pricing & Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Pricing *</Label>
-              <Select value={formData.pricing} onValueChange={(value) => handleInputChange("pricing", value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Free">Free</SelectItem>
-                  <SelectItem value="Freemium">Freemium</SelectItem>
-                  <SelectItem value="Paid">Paid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Pricing Model</Label>
-              <Input
-                value={formData.pricing_info.model}
-                onChange={(e) => handlePricingInfoChange("model", e.target.value)}
-                placeholder="e.g., Subscription, One-time"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Logo URL</Label>
-              <Input
-                type="url"
-                value={formData.logo_url}
-                onChange={(e) => handleInputChange("logo_url", e.target.value)}
-                placeholder="https://example.com/logo.png"
-              />
-              <div className="mt-2">
-                {logoPreview && (
-                  <div className="flex items-center gap-2 mb-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={logoPreview}
-                      alt="Logo preview"
-                      className="h-10 w-10 rounded object-contain border p-0.5"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {logoFile?.name}
-                    </span>
-                  </div>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => logoRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {logoPreview ? "Change Logo" : "Upload Logo"}
-                </Button>
-                <input
-                  ref={logoRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLogoSelect}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Recommended: 200×200 px, PNG/SVG, max 5MB
-                </p>
-              </div>
-            </div>
-            <div>
-              <Label>Hero Image URL</Label>
-              <Input
-                type="url"
-                value={formData.hero_image_url}
-                onChange={(e) => handleInputChange("hero_image_url", e.target.value)}
-                placeholder="https://example.com/hero.png"
-              />
-              <div className="mt-2">
-                {heroPreview && (
-                  <div className="flex items-center gap-2 mb-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={heroPreview}
-                      alt="Hero preview"
-                      className="h-10 w-16 rounded object-cover border p-0.5"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {heroFile?.name}
-                    </span>
-                  </div>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => heroRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {heroPreview ? "Change Hero" : "Upload Hero Image"}
-                </Button>
-                <input
-                  ref={heroRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleHeroSelect}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Recommended: 1200×600 px, PNG/JPG, max 5MB
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Label>Overview</Label>
-            <Textarea
-              value={formData.overview}
-              onChange={(e) => handleInputChange("overview", e.target.value)}
-              placeholder="Detailed overview of the tool"
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Features & Tags</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Key Features</Label>
-            {formData.key_features.map((feature, index) => (
-              <div key={index} className="flex gap-2 mt-2">
-                <Input
-                  placeholder="Feature title"
-                  value={feature.title}
-                  onChange={(e) => handleArrayChange("key_features", index, { ...feature, title: e.target.value })}
-                />
-                <Input
-                  placeholder="Feature description"
-                  value={feature.description}
-                  onChange={(e) => handleArrayChange("key_features", index, { ...feature, description: e.target.value })}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => removeArrayItem("key_features", index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => addArrayItem("key_features")}
-              className="mt-2"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Feature
-            </Button>
-          </div>
-
-          <div>
-            <Label>Tags</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.tags.map((tag, index) => (
-                <div key={index} className="flex items-center gap-1">
-                  <Input
-                    placeholder="Tag"
-                    value={tag}
-                    onChange={(e) => handleArrayChange("tags", index, e.target.value)}
-                    className="w-32"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeArrayItem("tags", index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+      {/* Category */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label>Category *</Label>
+          <Select value={form.category_id} onValueChange={handleCategoryChange}>
+            <SelectTrigger><SelectValue placeholder="Select category…" /></SelectTrigger>
+            <SelectContent>
+              {categories.map(cat => <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label>Subcategory</Label>
+          <Select value={form.subcategory_id} onValueChange={handleSubcategoryChange} disabled={!selectedCategory}>
+            <SelectTrigger><SelectValue placeholder="Select subcategory…" /></SelectTrigger>
+            <SelectContent>
+              {selectedCategory?.subcategories?.map(sub => (
+                <SelectItem key={sub.id} value={sub.id.toString()}>{sub.name}</SelectItem>
               ))}
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => addArrayItem("tags")}
-              className="mt-2"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Tag
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-      <div className="flex gap-4">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Adding Tool..." : "Add Tool"}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/admin/tool-submissions")}
-        >
-          Cancel
-        </Button>
+      {/* Logo & Hero */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Logo</Label>
+          {logoPreview && <img src={logoPreview} alt="logo" className="h-12 w-12 rounded object-contain border p-0.5" />}
+          <p className="text-xs text-muted-foreground">Recommended: 200×200 px · PNG/SVG</p>
+          <Button type="button" variant="outline" size="sm" onClick={() => logoRef.current?.click()}>
+            {logoPreview ? "Change Logo" : "Upload Logo"}
+          </Button>
+          <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={e => {
+            const f = e.target.files?.[0]; if (!f) return;
+            setLogoFile(f); setLogoPreview(URL.createObjectURL(f));
+          }} />
+          {logoFile && <p className="text-xs text-muted-foreground">{logoFile.name} — will upload on save</p>}
+        </div>
+        <div className="space-y-2">
+          <Label>Hero Image</Label>
+          {heroPreview && <img src={heroPreview} alt="hero" className="h-24 w-full rounded object-cover border" />}
+          <p className="text-xs text-muted-foreground">Recommended: 1200×630 px · JPG or PNG</p>
+          <Button type="button" variant="outline" size="sm" onClick={() => heroRef.current?.click()}>
+            {heroPreview ? "Change Hero Image" : "Upload Hero Image"}
+          </Button>
+          <input ref={heroRef} type="file" accept="image/*" className="hidden" onChange={e => {
+            const f = e.target.files?.[0]; if (!f) return;
+            setHeroFile(f); setHeroPreview(URL.createObjectURL(f));
+          }} />
+          {heroFile && <p className="text-xs text-muted-foreground">{heroFile.name} — will upload on save</p>}
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div className="space-y-1">
+        <Label>Pricing</Label>
+        <Select value={form.pricing} onValueChange={v => update({ pricing: v })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {["Free", "Freemium", "Paid"].map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-4 gap-3">
+        {(["model", "paidFrom", "billingFrequency", "freeTrial"] as const).map(k => (
+          <div key={k} className="space-y-1">
+            <Label className="capitalize">{k.replace(/([A-Z])/g, " $1")}</Label>
+            <Input value={form.pricing_info[k]} onChange={e => update({ pricing_info: { ...form.pricing_info, [k]: e.target.value } })} />
+          </div>
+        ))}
+      </div>
+
+      {/* Descriptions */}
+      <div className="space-y-1">
+        <Label>Short Description *</Label>
+        <Textarea rows={2} value={form.short_description} onChange={e => update({ short_description: e.target.value })} required />
+      </div>
+      <div className="space-y-1">
+        <Label>Overview</Label>
+        <Textarea rows={3} value={form.overview} onChange={e => update({ overview: e.target.value })} />
+      </div>
+      <div className="space-y-1">
+        <Label>Detail Description</Label>
+        <Textarea rows={5} value={form.detail_description} onChange={e => update({ detail_description: e.target.value })} />
+      </div>
+
+      {/* Key Features */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>Key Features</Label>
+          <Button type="button" size="sm" variant="outline" onClick={() => update({ key_features: [...form.key_features, { title: "", description: "" }] })}>+ Add</Button>
+        </div>
+        {form.key_features.map((f, i) => (
+          <div key={i} className="grid grid-cols-[1fr_2fr_auto] gap-2">
+            <Input placeholder="Title" value={f.title} onChange={e => { const kf = [...form.key_features]; kf[i] = { ...kf[i], title: e.target.value }; update({ key_features: kf }); }} />
+            <Input placeholder="Description" value={f.description} onChange={e => { const kf = [...form.key_features]; kf[i] = { ...kf[i], description: e.target.value }; update({ key_features: kf }); }} />
+            <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => update({ key_features: form.key_features.filter((_, j) => j !== i) })}>✕</Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Use Cases */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>Use Cases</Label>
+          <Button type="button" size="sm" variant="outline" onClick={() => update({ use_cases: [...form.use_cases, { title: "", audience: "", description: "" }] })}>+ Add</Button>
+        </div>
+        {form.use_cases.map((u, i) => (
+          <div key={i} className="grid grid-cols-[1fr_1fr_2fr_auto] gap-2">
+            <Input placeholder="Title" value={u.title} onChange={e => { const uc = [...form.use_cases]; uc[i] = { ...uc[i], title: e.target.value }; update({ use_cases: uc }); }} />
+            <Input placeholder="Audience" value={u.audience} onChange={e => { const uc = [...form.use_cases]; uc[i] = { ...uc[i], audience: e.target.value }; update({ use_cases: uc }); }} />
+            <Input placeholder="Description" value={u.description} onChange={e => { const uc = [...form.use_cases]; uc[i] = { ...uc[i], description: e.target.value }; update({ use_cases: uc }); }} />
+            <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => update({ use_cases: form.use_cases.filter((_, j) => j !== i) })}>✕</Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Pros & Cons */}
+      <div className="grid grid-cols-2 gap-4">
+        {(["pros", "cons"] as const).map(key => (
+          <div key={key} className="space-y-1">
+            <Label className="capitalize">{key} (one per line)</Label>
+            <Textarea rows={3} value={form[key].join("\n")} onChange={e => update({ [key]: e.target.value.split("\n") })} />
+          </div>
+        ))}
+      </div>
+
+      {/* Tags */}
+      <div className="space-y-1">
+        <Label>Tags (comma separated)</Label>
+        <Input value={form.tags} onChange={e => update({ tags: e.target.value })} placeholder="e.g. AI, Productivity, Writing" />
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Add & Publish"}</Button>
+        <Button type="button" variant="outline" onClick={() => router.push("/admin/tool-submissions")}>Cancel</Button>
       </div>
     </form>
   );

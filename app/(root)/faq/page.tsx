@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "FAQ",
+  description: "Frequently asked questions about AI Directory — submissions, pricing, reviews, and more.",
+};
+
 export default function FAQPage() {
   const faqs = [
     {

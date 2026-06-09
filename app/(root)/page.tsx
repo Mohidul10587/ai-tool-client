@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { HomePageClient } from "@/components/home-page-client";
 import { getApprovedFeaturedAds } from "@/lib/featured-ads-actions";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home",
+  description: "Discover and compare the best AI tools. Browse hundreds of AI tools by category, pricing, and use case.",
+};
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ subcategory?: string }> }) {
   const supabase = await createClient();
