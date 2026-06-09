@@ -196,25 +196,32 @@ export default function Navbar({ featuredAds = [], logoUrl = "" }: { featuredAds
 
       {featuredAds.length > 0 && (
         <div className="overflow-hidden border-t border-black/5 bg-white py-2 lg:hidden">
-          <div className="marquee-container flex">
-            <div className="marquee-content flex animate-marquee gap-3">
-              {[...featuredAds, ...featuredAds].filter(ad => ad.tool_name).map((ad, index) => (
-                <a key={`${ad.id}-${index}`} href={ad.url} target="_blank" rel="noopener noreferrer sponsored"
-                  className="flex h-9 items-center gap-2 whitespace-nowrap rounded-lg border border-black/10 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-black">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-black/10 overflow-hidden">
-                    {ad.logo_url ? (
-                      <img src={ad.logo_url} alt={ad.tool_name} className="w-full h-full object-contain" />
-                    ) : (
-                      <span className="text-[9px] font-bold text-black/70">
-                        {ad.tool_name.split(" ").filter(w => /^[a-zA-Z]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "AD"}
-                      </span>
-                    )}
-                  </div>
-                  {ad.tool_name}
-                </a>
-              ))}
-            </div>
-          </div>
+          {(() => {
+            const AD_COLORS = ["#fff1f2","#f0f9ff","#fffbeb","#ecfdf5","#f5f3ff","#fdf2f8","#ecfeff","#fff7ed","#f7fee7","#eef2ff"];
+            const limited = featuredAds.filter(ad => ad.tool_name).slice(0, 10);
+            const items = [...limited, ...limited];
+            const duration = `${limited.length * 3}s`;
+            return (
+              <div className="flex gap-3" style={{ width: "max-content", animation: `marquee ${duration} linear infinite` }}>
+                {items.map((ad, index) => (
+                  <a key={`${ad.id}-${index}`} href={ad.url} target="_blank" rel="noopener noreferrer sponsored"
+                    className="flex h-9 items-center gap-2 whitespace-nowrap rounded-lg border border-black/10 px-3 py-1.5 text-xs font-semibold text-black"
+                    style={{ backgroundColor: AD_COLORS[index % AD_COLORS.length] }}>
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-black/10 overflow-hidden">
+                      {ad.logo_url ? (
+                        <img src={ad.logo_url} alt={ad.tool_name} className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-[9px] font-bold text-black/70">
+                          {ad.tool_name.split(" ").filter(w => /^[a-zA-Z]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "AD"}
+                        </span>
+                      )}
+                    </div>
+                    {ad.tool_name}
+                  </a>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 

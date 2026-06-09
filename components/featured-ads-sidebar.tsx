@@ -11,16 +11,16 @@ type Ad = {
 };
 
 const COLORS = [
-  "bg-rose-50",
-  "bg-sky-50",
-  "bg-amber-50",
-  "bg-emerald-50",
-  "bg-violet-50",
-  "bg-pink-50",
-  "bg-cyan-50",
-  "bg-orange-50",
-  "bg-lime-50",
-  "bg-indigo-50",
+  "#fff1f2", // rose-50
+  "#f0f9ff", // sky-50
+  "#fffbeb", // amber-50
+  "#ecfdf5", // emerald-50
+  "#f5f3ff", // violet-50
+  "#fdf2f8", // pink-50
+  "#ecfeff", // cyan-50
+  "#fff7ed", // orange-50
+  "#f7fee7", // lime-50
+  "#eef2ff", // indigo-50
 ];
 
 function AdCard({
@@ -76,10 +76,9 @@ function AdCard({
       href={displayed.url}
       target="_blank"
       rel="noopener noreferrer sponsored"
-      className={`flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-black/10 px-3 py-2 transition-all hover:border-black/20 hover:shadow-md ${
-        COLORS[colorIndex % COLORS.length]
-      }`}
+      className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-black/10 px-3 py-2 transition-all hover:border-black/20 hover:shadow-md"
       style={{
+        backgroundColor: COLORS[colorIndex % COLORS.length],
         animation: animating ? "flip 0.8s ease-in-out forwards" : "none",
         transformStyle: "preserve-3d",
       }}
@@ -94,7 +93,9 @@ function AdCard({
               className="h-7 w-7 rounded object-contain"
             />
           ) : (
-            <span className="text-[9px] font-bold text-black/70">{initials}</span>
+            <span className="text-[9px] font-bold text-black/70">
+              {initials}
+            </span>
           )}
         </div>
         <div className="mt-1.5 text-xs font-bold text-black line-clamp-1">
@@ -117,7 +118,10 @@ function AdColumn({ ads, startIndex }: { ads: Ad[]; startIndex: number }) {
 
   const currentSlice = ads.slice(page * pageSize, page * pageSize + pageSize);
   const nextPage = (page + 1) % totalPages;
-  const nextSlice = ads.slice(nextPage * pageSize, nextPage * pageSize + pageSize);
+  const nextSlice = ads.slice(
+    nextPage * pageSize,
+    nextPage * pageSize + pageSize
+  );
 
   useEffect(() => {
     if (ads.length <= pageSize) return;
@@ -150,15 +154,21 @@ function AdColumn({ ads, startIndex }: { ads: Ad[]; startIndex: number }) {
 
 function MobileMarquee({ ads }: { ads: Ad[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  if (!ads.length) return null;
-  const items = [...ads, ...ads];
+  const limited = ads.slice(0, 10);
+  if (!limited.length) return null;
+  const items = [...limited, ...limited];
+  // ~3s per item so 10 items = 30s
+  const duration = `${limited.length * 3}s`;
 
   return (
     <div className="overflow-hidden">
       <div
         ref={trackRef}
-        className="flex gap-2 animate-marquee"
-        style={{ width: "max-content" }}
+        className="flex gap-2"
+        style={{
+          width: "max-content",
+          animation: `marquee ${duration} linear infinite`,
+        }}
       >
         {items.map((ad, i) => (
           <a
@@ -166,9 +176,8 @@ function MobileMarquee({ ads }: { ads: Ad[] }) {
             href={ad.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            className={`flex shrink-0 items-center gap-2 rounded-lg border border-black/10 px-3 py-1.5 ${
-              COLORS[i % COLORS.length]
-            }`}
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-black/10 px-3 py-1.5"
+            style={{ backgroundColor: COLORS[i % COLORS.length] }}
           >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-black/10 overflow-hidden">
               {ad.logo_url ? (
@@ -208,10 +217,10 @@ export function FeaturedAdsSidebar({ ads }: { ads: Ad[] }) {
       {/* Mobile: top + bottom marquee */}
       <div className="lg:hidden">
         <div className="fixed top-[52px] left-0 right-0 z-30 border-b border-black/10 bg-white px-2 py-1.5">
-          <MobileMarquee ads={ads.slice(0, 10)} />
+          <MobileMarquee ads={ads} />
         </div>
         <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-black/10 bg-white px-2 py-1.5">
-          <MobileMarquee ads={ads.slice(10, 20)} />
+          <MobileMarquee ads={[...ads].reverse()} />
         </div>
       </div>
 

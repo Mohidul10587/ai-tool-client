@@ -35,7 +35,8 @@ function VoteButtons({
   const [pending, startTransition] = useTransition();
 
   const score = upvotes - downvotes;
-  const fmt = (n: number) => (Math.abs(n) >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
+  const fmt = (n: number) =>
+    Math.abs(n) >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 
   function handleVote(e: React.MouseEvent, vote: 1 | -1) {
     e.preventDefault();
@@ -60,7 +61,9 @@ function VoteButtons({
         onClick={(e) => handleVote(e, 1)}
         disabled={pending}
         aria-label="Upvote"
-        className={`p-1.5 transition-all hover:bg-black/10 disabled:opacity-50 ${userVote === 1 ? "text-black" : "text-black/40"}`}
+        className={`p-1.5 transition-all hover:bg-black/10 disabled:opacity-50 ${
+          userVote === 1 ? "text-black" : "text-black/40"
+        }`}
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
           <polygon points="12,4 22,18 2,18" />
@@ -71,7 +74,9 @@ function VoteButtons({
         onClick={(e) => handleVote(e, -1)}
         disabled={pending}
         aria-label="Downvote"
-        className={`p-1.5 transition-all hover:bg-black/10 disabled:opacity-50 ${userVote === -1 ? "text-black" : "text-black/40"}`}
+        className={`p-1.5 transition-all hover:bg-black/10 disabled:opacity-50 ${
+          userVote === -1 ? "text-black" : "text-black/40"
+        }`}
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
           <polygon points="12,20 2,6 22,6" />
