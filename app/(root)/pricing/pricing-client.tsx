@@ -547,6 +547,7 @@ export default function PricingClient({
               ))}
             </div>
           </div>
+          <Footer2 />
         </div>
 
         {/* Premium Listing Modal */}
@@ -921,7 +922,6 @@ export default function PricingClient({
           </DialogContent>
         </Dialog>
       </div>
-      <Footer2 />
     </>
   );
 }
