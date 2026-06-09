@@ -1,8 +1,15 @@
 import type { CommentRow } from "@/lib/comment-actions";
 
-export type Ad = { id: number; url: string; description: string; tool_name: string; logo_url?: string | null };
+export type Ad = {
+  id: number;
+  url: string;
+  description: string;
+  tool_name: string;
+  logo_url?: string | null;
+};
 
 export type Tool = {
+  qa_items: never[];
   id: string;
   name: string | null;
   slug: string | null;

@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { updateSubmission, deleteSubmission } from "@/lib/submission-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { SubmissionEditModal } from "@/components/submission-edit-modal";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
@@ -25,7 +32,12 @@ type Submission = {
   logo_url?: string;
   hero_image_url?: string;
   platform?: string;
-  pricing_info?: { model?: string; paidFrom?: string; billingFrequency?: string; freeTrial?: string };
+  pricing_info?: {
+    model?: string;
+    paidFrom?: string;
+    billingFrequency?: string;
+    freeTrial?: string;
+  };
   key_features?: { title: string; description: string }[];
   use_cases?: { title: string; audience: string; description: string }[];
   pros?: string[];
@@ -33,11 +45,16 @@ type Submission = {
   tags?: string[];
   short_description?: string;
   detail_description?: string;
+  qa_items?: { question: string; answer: string }[];
 };
 
 const FILTERS = ["all", "pending", "published", "rejected"] as const;
 const statusVariant = (s: string) =>
-  s === "published" ? "default" : s === "rejected" ? "destructive" : "secondary";
+  s === "published"
+    ? "default"
+    : s === "rejected"
+    ? "destructive"
+    : "secondary";
 
 export function AdminSubmissionsList({
   submissions,
@@ -56,7 +73,10 @@ export function AdminSubmissionsList({
     router.push(`/admin/submissions?status=${f}`);
   }
 
-  async function handleSave(status: Submission["status"], overrides?: Partial<Submission>) {
+  async function handleSave(
+    status: Submission["status"],
+    overrides?: Partial<Submission>
+  ) {
     if (!editing) return;
     setSaving(true);
     setError(null);
@@ -80,6 +100,7 @@ export function AdminSubmissionsList({
       pros: merged.pros?.filter(Boolean),
       cons: merged.cons?.filter(Boolean),
       tags: merged.tags?.filter(Boolean),
+      qa_items: merged.qa_items?.filter((qa) => qa.question && qa.answer),
       short_description: merged.short_description,
       detail_description: merged.detail_description,
       status,
@@ -141,7 +162,10 @@ export function AdminSubmissionsList({
         <TableBody>
           {submissions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+              <TableCell
+                colSpan={4}
+                className="text-center text-muted-foreground py-8"
+              >
                 No submissions.
               </TableCell>
             </TableRow>
@@ -150,8 +174,12 @@ export function AdminSubmissionsList({
             <TableRow key={s.id}>
               <TableCell>
                 <p className="font-medium text-sm">{s.name ?? "—"}</p>
-                <a href={s.url} target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground underline truncate block max-w-xs">
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground underline truncate block max-w-xs"
+                >
                   {s.url}
                 </a>
               </TableCell>
@@ -163,23 +191,39 @@ export function AdminSubmissionsList({
               </TableCell>
               <TableCell>
                 <div className="flex gap-2 flex-wrap">
-                  <Button size="sm" variant="outline"
-                    onClick={() => { setEditing(s); setEditKey(k => k + 1); setError(null); }}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditing(s);
+                      setEditKey((k) => k + 1);
+                      setError(null);
+                    }}
+                  >
                     Edit
                   </Button>
                   {s.status === "published" ? (
-                    <Button size="sm" variant="secondary"
-                      onClick={() => quickStatus(s.id, "pending")}>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => quickStatus(s.id, "pending")}
+                    >
                       Unpublish
                     </Button>
                   ) : (
-                    <Button size="sm" onClick={() => quickStatus(s.id, "published")}>
+                    <Button
+                      size="sm"
+                      onClick={() => quickStatus(s.id, "published")}
+                    >
                       Publish
                     </Button>
                   )}
-                  <Button size="sm" variant="destructive"
+                  <Button
+                    size="sm"
+                    variant="destructive"
                     disabled={deleting === s.id}
-                    onClick={() => setConfirmDeleteId(s.id)}>
+                    onClick={() => setConfirmDeleteId(s.id)}
+                  >
                     {deleting === s.id ? "Deleting…" : "Delete"}
                   </Button>
                 </div>

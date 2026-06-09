@@ -79,11 +79,7 @@ const adminNav: NavItem[] = [
     href: "/admin/tool-submissions",
     icon: <Inbox size={18} />,
   },
-  {
-    label: "Add New Tool",
-    href: "/admin/add-tool",
-    icon: <Plus size={18} />,
-  },
+
   {
     label: "Featured Ads",
     href: "/admin/featured-ads",

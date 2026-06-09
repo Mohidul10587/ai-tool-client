@@ -133,7 +133,6 @@ export default function Navbar({ featuredAds = [], logoUrl = "" }: { featuredAds
         if (error) throw error;
         
         if (data && mounted) {
-          console.log("Categories loaded:", data.length);
           setCategories(data.map(cat => ({
             ...cat,
             subcategories: cat.subcategories.sort((a, b) => a.display_order - b.display_order)
@@ -164,7 +163,6 @@ export default function Navbar({ featuredAds = [], logoUrl = "" }: { featuredAds
   const toggleMegaMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Toggle mega menu clicked, current state:", isMegaMenuOpen);
     setIsMegaMenuOpen((prev) => !prev);
   };
 

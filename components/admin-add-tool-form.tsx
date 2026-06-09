@@ -20,6 +20,7 @@ type FormData = {
   key_features: { title: string; description: string }[];
   use_cases: { title: string; audience: string; description: string }[];
   pros: string[]; cons: string[]; tags: string;
+  qa_items: { question: string; answer: string }[];
 };
 
 const EMPTY: FormData = {
@@ -30,6 +31,7 @@ const EMPTY: FormData = {
   logo_url: "", hero_image_url: "",
   pricing_info: { model: "", paidFrom: "", billingFrequency: "", freeTrial: "" },
   key_features: [], use_cases: [], pros: [], cons: [], tags: "",
+  qa_items: [],
 };
 
 async function uploadImage(file: File): Promise<string> {
@@ -41,7 +43,7 @@ async function uploadImage(file: File): Promise<string> {
   return json.url as string;
 }
 
-export function AdminAddToolForm() {
+export function AdminAddToolForm({ onSuccess }: { onSuccess?: () => void }) {
   const router = useRouter();
   const [form, setForm] = useState<FormData>(EMPTY);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -104,11 +106,16 @@ export function AdminAddToolForm() {
           tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
           key_features: form.key_features.filter(f => f.title),
           use_cases: form.use_cases.filter(u => u.title),
+          qa_items: form.qa_items.filter(qa => qa.question && qa.answer),
           status: "published",
         }),
       });
       if (!res.ok) { const j = await res.json(); throw new Error(j.error || "Failed"); }
-      router.push("/admin/tool-submissions");
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/admin/tool-submissions");
+      }
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -266,6 +273,53 @@ export function AdminAddToolForm() {
           <div key={key} className="space-y-1">
             <Label className="capitalize">{key} (one per line)</Label>
             <Textarea rows={3} value={form[key].join("\n")} onChange={e => update({ [key]: e.target.value.split("\n") })} />
+          </div>
+        ))}
+      </div>
+
+      {/* Q&A Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label>Q&A Section</Label>
+          <Button type="button" variant="outline" size="sm" onClick={() => update({ qa_items: [...form.qa_items, { question: "", answer: "" }] })}>
+            Add Q&A
+          </Button>
+        </div>
+        {form.qa_items.map((qa, index) => (
+          <div key={index} className="border rounded-lg p-4 space-y-3">
+            <div className="flex justify-between items-start">
+              <Label className="text-sm">Q&A #{index + 1}</Label>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => update({ qa_items: form.qa_items.filter((_, i) => i !== index) })}
+                className="text-red-600 hover:text-red-800"
+              >
+                Remove
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Input
+                placeholder="Question"
+                value={qa.question}
+                onChange={e => {
+                  const updated = [...form.qa_items];
+                  updated[index].question = e.target.value;
+                  update({ qa_items: updated });
+                }}
+              />
+              <Textarea
+                rows={3}
+                placeholder="Answer"
+                value={qa.answer}
+                onChange={e => {
+                  const updated = [...form.qa_items];
+                  updated[index].answer = e.target.value;
+                  update({ qa_items: updated });
+                }}
+              />
+            </div>
           </div>
         ))}
       </div>

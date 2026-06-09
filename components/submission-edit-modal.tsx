@@ -43,6 +43,7 @@ type Submission = {
   pros?: string[];
   cons?: string[];
   tags?: string[];
+  qa_items?: { question: string; answer: string }[];
   short_description?: string;
   detail_description?: string;
 };
@@ -490,6 +491,62 @@ export function SubmissionEditModal({
                     update({ [key]: e.target.value.split("\n") })
                   }
                 />
+              </div>
+            ))}
+          </div>
+
+          {/* Q&A Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Q&A Section</Label>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={() => update({ 
+                  qa_items: [...(editing.qa_items ?? []), { question: "", answer: "" }] 
+                })}
+              >
+                Add Q&A
+              </Button>
+            </div>
+            {(editing.qa_items ?? []).map((qa, index) => (
+              <div key={index} className="border rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <Label className="text-sm">Q&A #{index + 1}</Label>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => update({ 
+                      qa_items: (editing.qa_items ?? []).filter((_, i) => i !== index) 
+                    })}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    Remove
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Question"
+                    value={qa.question}
+                    onChange={e => {
+                      const updated = [...(editing.qa_items ?? [])];
+                      updated[index].question = e.target.value;
+                      update({ qa_items: updated });
+                    }}
+                  />
+                  <Textarea
+                    rows={3}
+                    placeholder="Answer"
+                    value={qa.answer}
+                    onChange={e => {
+                      const updated = [...(editing.qa_items ?? [])];
+                      updated[index].answer = e.target.value;
+                      update({ qa_items: updated });
+                    }}
+                  />
+                </div>
               </div>
             ))}
           </div>

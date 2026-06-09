@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       pros,
       cons,
       tags,
+      qa_items,
       status = "published"
     } = body;
 
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       candidate = `${finalSlug}-${counter++}`;
     }
 
-    // Insert the tool directly to tools table (bypassing submission process)
+    // Insert the tool
     const { data: tool, error: toolError } = await adminClient
       .from("tool_submissions")
       .insert({
@@ -83,8 +84,9 @@ export async function POST(request: NextRequest) {
         pros: pros?.filter(Boolean) || [],
         cons: cons?.filter(Boolean) || [],
         tags: tags?.filter(Boolean) || [],
+        qa_items: qa_items?.filter(qa => qa.question && qa.answer) || [],
         status,
-        user_id: user.id, // Admin as submitter
+        user_id: user.id,
         submitted_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
