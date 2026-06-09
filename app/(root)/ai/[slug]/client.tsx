@@ -42,7 +42,7 @@ export function ToolDetailsClient({
   const pros = tool.pros ?? [];
   const cons = tool.cons ?? [];
   const qaItems = tool.qa_items ?? [];
-  console.log("qaItems", tool);
+  console.log("qaItems", qaItems);
   const voteProps = {
     toolId: tool.id,
     initialUpvotes,

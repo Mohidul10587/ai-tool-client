@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { updateFeaturedAdStatus, updateFeaturedAd, deleteFeaturedAd } from "@/lib/featured-ads-actions";
-import { Pencil, Trash2, Check, X } from "lucide-react";
+import { Pencil, Trash2, Check, X, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,46 @@ export default function AdminFeaturedAdsClient({ ads: initial }: { ads: Ad[] }) 
   const [loading, setLoading] = useState<number | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const logoRef = useRef<HTMLInputElement>(null);
+
+  // Add modal state
+  const [addOpen, setAddOpen] = useState(false);
+  const [addUrl, setAddUrl] = useState("");
+  const [addDesc, setAddDesc] = useState("");
+  const [addToolName, setAddToolName] = useState("");
+  const [addLogoFile, setAddLogoFile] = useState<File | null>(null);
+  const [addLogoPreview, setAddLogoPreview] = useState("");
+  const [addPricePaid, setAddPricePaid] = useState("");
+  const [addSaving, setAddSaving] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const addLogoRef = useRef<HTMLInputElement>(null);
+
+  const openAdd = () => {
+    setAddUrl(""); setAddDesc(""); setAddToolName("");
+    setAddLogoFile(null); setAddLogoPreview(""); setAddPricePaid("");
+    setAddError(null); setAddOpen(true);
+  };
+
+  const handleAdd = async () => {
+    if (!addUrl || !addDesc || !addToolName) { setAddError("URL, tool name and description are required."); return; }
+    setAddSaving(true); setAddError(null);
+    try {
+      let logo_url = "";
+      if (addLogoFile) logo_url = await uploadLogo(addLogoFile);
+      const res = await fetch("/api/admin/add-featured-ad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: addUrl, description: addDesc, tool_name: addToolName, logo_url: logo_url || undefined, price_paid: addPricePaid, status: "approved" }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed");
+      setAds(prev => [json.featuredAd, ...prev]);
+      setAddOpen(false);
+    } catch (e: any) {
+      setAddError(e.message);
+    } finally {
+      setAddSaving(false);
+    }
+  };
 
   const refresh = (updated: Ad) =>
     setAds((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
@@ -101,6 +141,10 @@ export default function AdminFeaturedAdsClient({ ads: initial }: { ads: Ad[] }) 
 
   return (
     <div className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <span />
+        <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add Featured Ad</Button>
+      </div>
       {!ads.length && <p className="text-gray-500">No requests yet.</p>}
       <div className="space-y-4">
         {ads.map((ad, i) => (
@@ -200,6 +244,50 @@ export default function AdminFeaturedAdsClient({ ads: initial }: { ads: Ad[] }) 
         onConfirm={() => confirmDeleteId !== null && handleDelete(confirmDeleteId)}
         onCancel={() => setConfirmDeleteId(null)}
       />
+
+      {/* Add Featured Ad Modal */}
+      <Dialog open={addOpen} onOpenChange={v => { if (!v) setAddOpen(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Add Featured Ad</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            {addError && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{addError}</p>}
+            <div className="space-y-1">
+              <Label>Tool Name *</Label>
+              <Input value={addToolName} onChange={e => setAddToolName(e.target.value)} placeholder="Tool Name" />
+            </div>
+            <div className="space-y-1">
+              <Label>URL *</Label>
+              <Input type="url" value={addUrl} onChange={e => setAddUrl(e.target.value)} placeholder="https://..." />
+            </div>
+            <div className="space-y-1">
+              <Label>Description * <span className="text-xs text-muted-foreground">(max 40 chars)</span></Label>
+              <Input value={addDesc} onChange={e => setAddDesc(e.target.value.slice(0, 40))} maxLength={40} placeholder="Short description" />
+              <p className="text-right text-xs text-muted-foreground">{addDesc.length}/40</p>
+            </div>
+            <div className="space-y-1">
+              <Label>Price Paid</Label>
+              <Input value={addPricePaid} onChange={e => setAddPricePaid(e.target.value)} placeholder="e.g. 49.00" />
+            </div>
+            <div className="space-y-2">
+              <Label>Logo</Label>
+              {addLogoPreview && <img src={addLogoPreview} alt="preview" className="h-10 w-10 rounded object-contain border p-0.5" />}
+              <p className="text-xs text-muted-foreground">Recommended: 200×200 px · PNG/SVG · max 2MB</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => addLogoRef.current?.click()}>
+                {addLogoPreview ? "Change Logo" : "Upload Logo"}
+              </Button>
+              <input ref={addLogoRef} type="file" accept="image/*" className="hidden" onChange={e => {
+                const f = e.target.files?.[0]; if (!f) return;
+                setAddLogoFile(f); setAddLogoPreview(URL.createObjectURL(f));
+              }} />
+              {addLogoFile && <p className="text-xs text-muted-foreground">{addLogoFile.name} — will upload on save</p>}
+            </div>
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={handleAdd} disabled={addSaving}>{addSaving ? "Saving…" : "Add & Approve"}</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setAddOpen(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

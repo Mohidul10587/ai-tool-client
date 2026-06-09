@@ -9,7 +9,7 @@ export type Ad = {
 };
 
 export type Tool = {
-  qa_items: never[];
+  qa_items: { question: string; answer: string }[] | null;
   id: string;
   name: string | null;
   slug: string | null;

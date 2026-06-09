@@ -14,7 +14,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   let query = supabase
     .from("tool_submissions")
-    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url")
+    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url, url")
     .eq("status", "published")
     .not("name", "is", null)
     .order("updated_at", { ascending: false });

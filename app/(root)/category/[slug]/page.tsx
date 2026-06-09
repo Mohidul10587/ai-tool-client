@@ -29,13 +29,11 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
   const { data: tools } = await supabase
     .from("tool_submissions")
-    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url")
+    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url, url")
     .eq("status", "published")
     .eq("subcategory_id", subcategory.id)
     .not("name", "is", null)
-    .order("updated_at", { ascending: false });
-
-  let voteMap: Record<string, 1 | -1> = {};
+    .order("updated_at", { ascending: false });: Record<string, 1 | -1> = {};
   let voteCounts: Record<string, { upvotes: number; downvotes: number }> = {};
 
   if (tools?.length) {

@@ -86,11 +86,6 @@ const adminNav: NavItem[] = [
     icon: <Inbox size={18} />,
   },
   {
-    label: "Add Featured Ad",
-    href: "/admin/add-featured-ad",
-    icon: <Plus size={18} />,
-  },
-  {
     label: "Submission Service",
     href: "/admin/submission-service",
     icon: <Send size={18} />,

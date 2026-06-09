@@ -239,7 +239,6 @@ export function AdminSubmissionsList({
         saving={saving}
         error={error}
         onClose={() => setEditing(null)}
-        onChange={setEditing}
         onSave={handleSave}
       />
       <ConfirmDialog

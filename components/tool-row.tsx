@@ -16,6 +16,7 @@ export type ToolRowData = {
   upvotes?: number;
   downvotes?: number;
   userVote?: 1 | -1 | null;
+  url: string | null;
 };
 
 function VoteButtons({
@@ -87,57 +88,57 @@ function VoteButtons({
 }
 
 export function ToolRow({ tool }: { tool: ToolRowData }) {
+  console.log(tool);
   return (
-    <Link
-      href={`/ai/${tool.slug}`}
-      className="group flex items-center gap-3 rounded-lg border border-black/10 bg-white p-2.5 transition-all hover:border-black/20 hover:bg-black/5 md:gap-4 md:p-3"
-    >
-      {tool.logo_url ? (
-        <img
-          src={tool.logo_url}
-          alt={tool.name ?? ""}
-          className="h-10 w-10 shrink-0 rounded-lg object-cover md:h-12 md:w-12"
+    <div className="group relative">
+      <Link
+        href={`/ai/${tool.slug}`}
+        className="flex items-center gap-3 rounded-lg border border-black/10 bg-white p-2.5 transition-all hover:border-black/20 hover:bg-black/5 md:gap-4 md:p-3"
+      >
+        {tool.logo_url ? (
+          <img
+            src={tool.logo_url}
+            alt={tool.name ?? ""}
+            className="h-10 w-10 shrink-0 rounded-lg object-cover md:h-12 md:w-12"
+          />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black text-sm font-bold text-white md:h-12 md:w-12 md:text-base">
+            {tool.name?.charAt(0) ?? "?"}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <h4 className="text-sm font-semibold text-black">{tool.name}</h4>
+            {tool.subcategory_snapshot && (
+              <span className="hidden rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-black/70 md:inline-block">
+                {tool.subcategory_snapshot}
+              </span>
+            )}
+            {tool.pricing && (
+              <span className="hidden rounded-full bg-black px-2 py-0.5 text-[10px] font-bold uppercase text-white md:inline-block">
+                {tool.pricing}
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 line-clamp-2 text-xs text-black/60 md:mt-1 md:line-clamp-1">
+            {tool.overview}
+          </p>
+        </div>
+
+        <VoteButtons
+          toolId={tool.id}
+          initialUpvotes={tool.upvotes ?? 0}
+          initialDownvotes={tool.downvotes ?? 0}
+          initialUserVote={tool.userVote ?? null}
         />
-      ) : (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black text-sm font-bold text-white md:h-12 md:w-12 md:text-base">
-          {tool.name?.charAt(0) ?? "?"}
-        </div>
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <h4 className="text-sm font-semibold text-black">{tool.name}</h4>
-          {tool.subcategory_snapshot && (
-            <span className="hidden rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-black/70 md:inline-block">
-              {tool.subcategory_snapshot}
-            </span>
-          )}
-          {tool.pricing && (
-            <span className="hidden rounded-full bg-black px-2 py-0.5 text-[10px] font-bold uppercase text-white md:inline-block">
-              {tool.pricing}
-            </span>
-          )}
-        </div>
-        <p className="mt-0.5 line-clamp-2 text-xs text-black/60 md:mt-1 md:line-clamp-1">
-          {tool.overview}
-        </p>
-      </div>
-      <button
-        // onClick={(e) => {
-        //   e.preventDefault();
-        //   e.stopPropagation();
-        //   window.open(`/ai/${tool.slug}`, "_blank");
-        // }}
+      </Link>
+      <Link
+        href={tool.url ?? "#"}
         aria-label="Open in new tab"
-        className="hidden shrink-0 items-center justify-center rounded-lg border border-black/10 bg-black/5 p-2 opacity-0 transition-all hover:bg-black hover:text-white group-hover:opacity-100 md:flex"
+        className="absolute right-16 top-1/2 -translate-y-1/2 hidden shrink-0 items-center justify-center rounded-lg border border-black/10 bg-black/5 p-2 opacity-0 transition-all hover:bg-black hover:text-white group-hover:opacity-100 md:flex"
       >
         <ExternalLink className="h-4 w-4" />
-      </button>
-      <VoteButtons
-        toolId={tool.id}
-        initialUpvotes={tool.upvotes ?? 0}
-        initialDownvotes={tool.downvotes ?? 0}
-        initialUserVote={tool.userVote ?? null}
-      />
-    </Link>
+      </Link>
+    </div>
   );
 }
