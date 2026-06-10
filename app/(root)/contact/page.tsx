@@ -1,10 +1,12 @@
+import Footer2 from "@/components/footer2";
 import { getSiteSettings } from "@/lib/site-settings";
 import { Mail, Twitter, Facebook, Linkedin } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with the AI Directory team for tool submissions, partnerships, advertising, or general enquiries.",
+  description:
+    "Get in touch with the AI Directory team for tool submissions, partnerships, advertising, or general enquiries.",
 };
 
 export default async function ContactPage() {
@@ -43,14 +45,20 @@ export default async function ContactPage() {
       value: settings.social_linkedin,
       href: settings.social_linkedin,
     },
-  ].filter(Boolean) as { icon: React.ReactNode; label: string; value: string; href: string }[];
+  ].filter(Boolean) as {
+    icon: React.ReactNode;
+    label: string;
+    value: string;
+    href: string;
+  }[];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-16 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 py-16 space-y-10">
       <div>
         <h1 className="text-3xl font-bold mb-2">Contact Us</h1>
         <p className="text-muted-foreground">
-          We&apos;d love to hear from you. Reach out through any of the channels below.
+          We&apos;d love to hear from you. Reach out through any of the channels
+          below.
         </p>
       </div>
 
@@ -67,7 +75,9 @@ export default async function ContactPage() {
               <span className="text-muted-foreground">{c.icon}</span>
               <div>
                 <p className="text-sm font-medium">{c.label}</p>
-                <p className="text-xs text-muted-foreground break-all">{c.value}</p>
+                <p className="text-xs text-muted-foreground break-all">
+                  {c.value}
+                </p>
               </div>
             </a>
           ))}
@@ -81,9 +91,12 @@ export default async function ContactPage() {
       <div className="rounded-xl border border-border p-6 space-y-3 bg-muted/20">
         <h2 className="text-base font-semibold">General Enquiries</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          For tool submissions, partnership opportunities, advertising, or any other enquiries, please use the contact details above. We aim to respond within 2 business days.
+          For tool submissions, partnership opportunities, advertising, or any
+          other enquiries, please use the contact details above. We aim to
+          respond within 2 business days.
         </p>
       </div>
+      <Footer2 />
     </div>
   );
 }

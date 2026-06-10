@@ -1,3 +1,4 @@
+import Footer2 from "@/components/footer2";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -43,10 +44,12 @@ export default function SitemapPage() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-16 space-y-10">
+    <div className="max-w-5xl mx-auto px-4 py-16 space-y-10">
       <div>
         <h1 className="text-3xl font-bold mb-2">Sitemap</h1>
-        <p className="text-muted-foreground">All pages available on AI Directory.</p>
+        <p className="text-muted-foreground">
+          All pages available on AI Directory.
+        </p>
       </div>
 
       <div className="grid gap-8 sm:grid-cols-2">
@@ -70,6 +73,7 @@ export default function SitemapPage() {
           </div>
         ))}
       </div>
+      <Footer2 />
     </div>
   );
 }

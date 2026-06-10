@@ -32,16 +32,10 @@ export default function Footer2() {
   const [settings, setSettings] = useState<any>({});
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const { getSiteSettings } = await import("@/lib/site-settings");
-        const data = await getSiteSettings();
-        setSettings(data || {});
-      } catch (error) {
-        console.error("Error loading settings:", error);
-      }
-    };
-    loadSettings();
+    fetch("/api/site-settings")
+      .then((r) => r.json())
+      .then((data) => setSettings(data || {}))
+      .catch(console.error);
   }, []);
 
   return (
