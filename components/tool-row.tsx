@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Bookmark } from "lucide-react";
 import { voteOnTool } from "@/lib/vote-actions";
+import { toggleSavedTool, isToolSaved } from "@/lib/saved-tools";
+import { createClient } from "@/lib/supabase/client";
 
 export type ToolRowData = {
   id: string;
@@ -88,7 +90,25 @@ function VoteButtons({
 }
 
 export function ToolRow({ tool }: { tool: ToolRowData }) {
-  console.log(tool);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSaved(isToolSaved(tool.id));
+  }, [tool.id]);
+
+  async function handleBookmark(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { window.location.href = "/login"; return; }
+    const isSaved = toggleSavedTool({
+      id: tool.id, name: tool.name ?? "", slug: tool.slug ?? "",
+      logo_url: tool.logo_url, pricing: tool.pricing,
+      subcategory_snapshot: tool.subcategory_snapshot,
+    });
+    setSaved(isSaved);
+  }
   return (
     <div className="group relative">
       <Link
@@ -139,6 +159,17 @@ export function ToolRow({ tool }: { tool: ToolRowData }) {
       >
         <ExternalLink className="h-4 w-4" />
       </Link>
+      <button
+        onClick={handleBookmark}
+        aria-label={saved ? "Remove bookmark" : "Save tool"}
+        className={`absolute right-28 top-1/2 -translate-y-1/2 hidden shrink-0 items-center justify-center rounded-lg border p-2 opacity-0 transition-all group-hover:opacity-100 md:flex ${
+          saved
+            ? "border-black bg-black text-white"
+            : "border-black/10 bg-black/5 hover:bg-black hover:text-white"
+        }`}
+      >
+        <Bookmark className="h-4 w-4" fill={saved ? "currentColor" : "none"} />
+      </button>
     </div>
   );
 }

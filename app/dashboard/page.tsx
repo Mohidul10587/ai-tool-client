@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { unstable_noStore as noStore } from "next/cache";
 import { RecentlyViewed } from "@/components/recently-viewed";
+import { SavedToolsCount } from "@/components/saved-tools-count";
+import { SavedToolsList } from "@/components/saved-tools-list";
 
 export default async function DashboardPage() {
   noStore();
@@ -45,7 +47,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[
-          { label: "Saved Tools", value: "0" },
+          { label: "Saved Tools", value: <SavedToolsCount /> },
           { label: "Reviews", value: "0" },
         ].map((stat) => (
           <Card key={stat.label}>
@@ -57,6 +59,7 @@ export default async function DashboardPage() {
         ))}
       </div>
 
+      <SavedToolsList />
       <RecentlyViewed />
     </div>
   );
