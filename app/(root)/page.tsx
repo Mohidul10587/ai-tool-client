@@ -8,60 +8,56 @@ export const metadata: Metadata = {
   description: "Discover and compare the best AI tools. Browse hundreds of AI tools by category, pricing, and use case.",
 };
 
-export default async function HomePage({ searchParams }: { searchParams: Promise<{ subcategory?: string }> }) {
+const PAGE_SIZE = 20;
+
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ subcategory?: string; page?: string }> }) {
   const supabase = await createClient();
-  const { subcategory } = await searchParams;
+  const { subcategory, page } = await searchParams;
+  const currentPage = Math.max(1, parseInt(page ?? "1", 10));
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
-  let query = supabase
-    .from("tool_submissions")
-    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url, url")
-    .eq("status", "published")
-    .not("name", "is", null)
-    .order("updated_at", { ascending: false });
-
+  let subcategoryId: string | null = null;
   if (subcategory) {
     const { data: subcat } = await supabase
       .from("subcategories")
       .select("id")
       .eq("slug", subcategory)
       .single();
-    if (subcat) query = query.eq("subcategory_id", subcat.id);
+    subcategoryId = subcat?.id ?? null;
   }
 
-  const { data: tools } = await query.limit(100);
+  let query = supabase
+    .from("tool_submissions")
+    .select("id, name, slug, overview, subcategory_snapshot, pricing, logo_url, url, upvotes, downvotes", { count: "exact" })
+    .eq("status", "published")
+    .not("name", "is", null)
+    .order("updated_at", { ascending: false })
+    .range(from, to);
 
-  // Try to fetch vote counts (only works after migration)
+  if (subcategoryId) query = query.eq("subcategory_id", subcategoryId);
+
+  const { data: tools, count } = await query;
+  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
+
+  // Fetch user votes for visible tools
   let voteMap: Record<string, 1 | -1> = {};
-  let voteCounts: Record<string, { upvotes: number; downvotes: number }> = {};
-
   if (tools?.length) {
-    const ids = tools.map((t) => t.id);
-
-    const [votesRes, { data: { user } }] = await Promise.all([
-      supabase.from("tool_submissions").select("id, upvotes, downvotes").in("id", ids),
-      supabase.auth.getUser(),
-    ]);
-
-    if (!votesRes.error) {
-      voteCounts = Object.fromEntries(
-        (votesRes.data ?? []).map((t) => [t.id, { upvotes: t.upvotes ?? 0, downvotes: t.downvotes ?? 0 }])
-      );
-
-      if (user) {
-        const { data: userVotes } = await supabase
-          .from("tool_votes")
-          .select("tool_id, vote")
-          .eq("user_id", user.id)
-          .in("tool_id", ids);
-        voteMap = Object.fromEntries((userVotes ?? []).map((v) => [v.tool_id, v.vote]));
-      }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: userVotes } = await supabase
+        .from("tool_votes")
+        .select("tool_id, vote")
+        .eq("user_id", user.id)
+        .in("tool_id", tools.map((t) => t.id));
+      voteMap = Object.fromEntries((userVotes ?? []).map((v) => [v.tool_id, v.vote]));
     }
   }
 
   const toolsWithVotes = (tools ?? []).map((t) => ({
     ...t,
-    upvotes: voteCounts[t.id]?.upvotes ?? 0,
-    downvotes: voteCounts[t.id]?.downvotes ?? 0,
+    upvotes: t.upvotes ?? 0,
+    downvotes: t.downvotes ?? 0,
     userVote: voteMap[t.id] ?? null,
   }));
 
@@ -70,5 +66,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     getApprovedFeaturedAds(),
   ]);
 
-  return <HomePageClient tools={toolsWithVotes} categories={categories} selectedSubcategory={subcategory} featuredAds={featuredAds} />;
+  return (
+    <HomePageClient
+      tools={toolsWithVotes}
+      categories={categories}
+      selectedSubcategory={subcategory}
+      featuredAds={featuredAds}
+      currentPage={currentPage}
+      totalPages={totalPages}
+    />
+  );
 }

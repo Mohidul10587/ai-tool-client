@@ -17,7 +17,8 @@ import {
   FolderTree,
   Send,
   FileText,
-  Plus,
+  ChevronDown,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,8 +27,9 @@ import { cn } from "@/lib/utils";
 
 interface NavItem {
   label: string;
-  href: string;
+  href?: string;
   icon: React.ReactNode;
+  children?: { label: string; href: string; icon: React.ReactNode }[];
 }
 
 interface PanelLayoutProps {
@@ -44,31 +46,16 @@ const userNav: NavItem[] = [
     icon: <LayoutDashboard size={18} />,
   },
   {
-    label: "Tools Submissions",
-    href: "/dashboard/tool-submissions",
-    icon: <Inbox size={18} />,
+    label: "Advertise",
+    icon: <Megaphone size={18} />,
+    children: [
+      { label: "Tool Submissions", href: "/dashboard/tool-submissions", icon: <Inbox size={18} /> },
+      { label: "Featured Ad", href: "/dashboard/featured-ad", icon: <FileText size={18} /> },
+      { label: "Submission Service", href: "/dashboard/submission-service", icon: <Send size={18} /> },
+      { label: "Public Review", href: "/dashboard/public-review", icon: <FileText size={18} /> },
+    ],
   },
-  {
-    label: "Featured Ad",
-    href: "/dashboard/featured-ad",
-    icon: <FileText size={18} />,
-  },
-  {
-    label: "Submission Service",
-    href: "/dashboard/submission-service",
-    icon: <Send size={18} />,
-  },
-  {
-    label: "Public Review",
-    href: "/dashboard/public-review",
-    icon: <FileText size={18} />,
-  },
-  { label: "Profile", href: "/dashboard/profile", icon: <User size={18} /> },
-  {
-    label: "Profile Settings",
-    href: "/dashboard/settings",
-    icon: <Settings size={18} />,
-  },
+  { label: "Profile Settings", href: "/dashboard/settings", icon: <Settings size={18} /> },
 ];
 
 const adminNav: NavItem[] = [
@@ -142,12 +129,18 @@ function SidebarContent({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
+  const [openMenus, setOpenMenus] = useState<string[]>(() =>
+    nav.filter(item => item.children?.some(c => pathname.startsWith(c.href))).map(i => i.label)
+  );
   const initials = userName
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  const toggleMenu = (label: string) =>
+    setOpenMenus(prev => prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]);
 
   return (
     <div className="flex flex-col h-full">
@@ -168,22 +161,59 @@ function SidebarContent({
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 py-4 space-y-1">
-        {nav.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onClose}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-              pathname === item.href
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            {item.icon}
-            {item.label}
-          </Link>
-        ))}
+        {nav.map((item) => {
+          if (item.children) {
+            const isOpen = openMenus.includes(item.label);
+            return (
+              <div key={item.label}>
+                <button
+                  onClick={() => toggleMenu(item.label)}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  {item.icon}
+                  <span className="flex-1 text-left">{item.label}</span>
+                  <ChevronDown size={15} className={cn("transition-transform", isOpen && "rotate-180")} />
+                </button>
+                {isOpen && (
+                  <div className="ml-4 mt-1 space-y-1 border-l pl-3">
+                    {item.children.map(child => (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                          pathname === child.href
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        {child.icon}
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
+          return (
+            <Link
+              key={item.href}
+              href={item.href!}
+              onClick={onClose}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                pathname === item.href
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          );
+        })}
 
         {/* Homepage link */}
         <Link

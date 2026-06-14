@@ -10,7 +10,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSiteSettings();
   return {
-    title: { default: s.site_title, template: `%s | ${s.site_title}` },
+    title: { default: s.site_title, template: `%s` },
     description: s.site_description,
     keywords: s.site_keywords.split(",").map((k) => k.trim()),
     verification: { google: s.google_verification || undefined },

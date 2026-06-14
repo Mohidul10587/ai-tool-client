@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
   MessageSquare,
@@ -85,19 +86,6 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   Property: Building,
 };
 
-const COLORS = [
-  "bg-rose-50",
-  "bg-sky-50",
-  "bg-amber-50",
-  "bg-emerald-50",
-  "bg-violet-50",
-  "bg-pink-50",
-  "bg-cyan-50",
-  "bg-orange-50",
-  "bg-lime-50",
-  "bg-indigo-50",
-];
-
 type Ad = {
   id: number;
   url: string;
@@ -106,26 +94,28 @@ type Ad = {
   logo_url?: string | null;
 };
 
-// ── Main Component ────────────────────────────────────────────────────────────
 export function HomePageClient({
   tools,
   categories,
   selectedSubcategory,
   featuredAds = [],
+  currentPage,
+  totalPages,
 }: {
   tools: ToolRowData[];
   categories: Category[];
   selectedSubcategory?: string;
   featuredAds?: Ad[];
+  currentPage: number;
+  totalPages: number;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [search, setSearch] = useState("");
-  const [activeSubcat, setActiveSubcat] = useState(selectedSubcategory ?? "");
   const [pricingFilter, setPricingFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("newest");
   const [showAllCats, setShowAllCats] = useState(false);
-  const [displayCount, setDisplayCount] = useState(50);
 
-  // Build flat subcategory list with icons
   const subcats = [
     { slug: "", name: "All", icon: Layers },
     ...categories.flatMap((c) =>
@@ -139,29 +129,28 @@ export function HomePageClient({
 
   const visibleCats = showAllCats ? subcats : subcats.slice(0, 20);
 
+  function navigate(subcategory: string, page: number) {
+    const params = new URLSearchParams();
+    if (subcategory) params.set("subcategory", subcategory);
+    if (page > 1) params.set("page", String(page));
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+  }
+
+  // Client-side search + pricing filter on top of server-fetched page
   const filtered = tools
     .filter((t) => {
       const matchSearch =
         !search ||
         t.name?.toLowerCase().includes(search.toLowerCase()) ||
         t.overview?.toLowerCase().includes(search.toLowerCase());
-      const matchSubcat =
-        !activeSubcat ||
-        categories.some((c) =>
-          c.subcategories?.some(
-            (s) => s.slug === activeSubcat && t.subcategory_snapshot === s.name
-          )
-        );
       const matchPricing =
         !pricingFilter || t.pricing?.toLowerCase() === pricingFilter;
-      return matchSearch && matchSubcat && matchPricing;
+      return matchSearch && matchPricing;
     })
-    .sort((a, b) => {
-      if (sortBy === "popular") return (b.upvotes ?? 0) - (a.upvotes ?? 0);
-      return 0; // "newest" — already ordered by updated_at from server
-    });
-
-  const visible = filtered.slice(0, displayCount);
+    .sort((a, b) =>
+      sortBy === "popular" ? (b.upvotes ?? 0) - (a.upvotes ?? 0) : 0
+    );
 
   return (
     <div className="min-h-screen bg-white relative">
@@ -185,10 +174,7 @@ export function HomePageClient({
                   type="text"
                   placeholder="Search AI tools..."
                   value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setDisplayCount(50);
-                  }}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="w-full rounded-lg border border-black/10 bg-black/5 py-1.5 pl-8 pr-3 text-sm text-black placeholder:text-black/40 focus:border-black/30 focus:outline-none"
                 />
               </div>
@@ -206,12 +192,9 @@ export function HomePageClient({
                 return (
                   <button
                     key={cat.slug}
-                    onClick={() => {
-                      setActiveSubcat(cat.slug);
-                      setDisplayCount(50);
-                    }}
+                    onClick={() => navigate(cat.slug, 1)}
                     className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                      activeSubcat === cat.slug
+                      (selectedSubcategory ?? "") === cat.slug
                         ? "bg-black text-white"
                         : "border border-black/10 bg-black/5 text-black/70 hover:border-black/20 hover:text-black"
                     }`}
@@ -229,15 +212,9 @@ export function HomePageClient({
                   className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-black/5 px-3 py-1.5 text-xs font-medium text-black/70 hover:bg-black/10 hover:text-black"
                 >
                   {showAllCats ? (
-                    <>
-                      <span>Show less</span>
-                      <ChevronUp className="h-3 w-3" />
-                    </>
+                    <><span>Show less</span><ChevronUp className="h-3 w-3" /></>
                   ) : (
-                    <>
-                      <span>Show more</span>
-                      <ChevronDown className="h-3 w-3" />
-                    </>
+                    <><span>Show more</span><ChevronDown className="h-3 w-3" /></>
                   )}
                 </button>
               </div>
@@ -259,7 +236,6 @@ export function HomePageClient({
                       setSortBy(f);
                       setPricingFilter(null);
                     }
-                    setDisplayCount(50);
                   }}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-all capitalize ${
                     (f === sortBy && !pricingFilter) || pricingFilter === f
@@ -267,30 +243,38 @@ export function HomePageClient({
                       : "border border-black/10 bg-black/5 text-black/70 hover:border-black/20 hover:text-black"
                   }`}
                 >
-                  {f === "newest"
-                    ? "Newest"
-                    : f.charAt(0).toUpperCase() + f.slice(1)}
+                  {f === "newest" ? "Newest" : f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}
             </div>
 
             <div className="flex flex-col gap-2">
-              {visible.length === 0 ? (
-                <p className="py-12 text-center text-sm text-black/40">
-                  No tools found
-                </p>
+              {filtered.length === 0 ? (
+                <p className="py-12 text-center text-sm text-black/40">No tools found</p>
               ) : (
-                visible.map((tool) => <ToolRow key={tool.id} tool={tool} />)
+                filtered.map((tool) => <ToolRow key={tool.id} tool={tool} />)
               )}
             </div>
 
-            {displayCount < filtered.length && (
-              <div className="mt-6 text-center">
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
                 <button
-                  onClick={() => setDisplayCount((c) => c + 20)}
-                  className="inline-flex items-center gap-2 rounded-full border border-black/20 bg-black/5 px-5 py-2 text-sm font-medium text-black hover:bg-black/10"
+                  disabled={currentPage <= 1}
+                  onClick={() => navigate(selectedSubcategory ?? "", currentPage - 1)}
+                  className="rounded-full border border-black/20 px-4 py-1.5 text-xs font-medium text-black disabled:opacity-30 hover:bg-black/5"
                 >
-                  Load More Tools
+                  Previous
+                </button>
+                <span className="text-xs text-black/50">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  disabled={currentPage >= totalPages}
+                  onClick={() => navigate(selectedSubcategory ?? "", currentPage + 1)}
+                  className="rounded-full border border-black/20 px-4 py-1.5 text-xs font-medium text-black disabled:opacity-30 hover:bg-black/5"
+                >
+                  Next
                 </button>
               </div>
             )}

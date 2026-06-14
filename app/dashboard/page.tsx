@@ -1,31 +1,48 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { unstable_noStore as noStore } from "next/cache";
 
 export default async function DashboardPage() {
+  noStore();
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-
+  console.log(user.user_metadata);
   const name: string = user.user_metadata?.name ?? "User";
-  const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+  const avatarUrl: string | undefined = user.user_metadata?.avatar_url;
+  const initials = name
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <div className="space-y-6 max-w-4xl">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
-            <Avatar><AvatarFallback>{initials}</AvatarFallback></Avatar>
+            <div className="relative flex size-8 shrink-0 overflow-hidden rounded-full bg-muted">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt={name} className="aspect-square size-full object-cover" />
+              ) : (
+                <span className="flex size-full items-center justify-center text-xs font-medium">{initials}</span>
+              )}
+            </div>
             My Profile
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           {[
             { label: "Name", value: name },
-            { label: "Email", value: user.email },
-            { label: "Role", value: user.user_metadata?.role ?? "user" },
-            { label: "Joined", value: new Date(user.created_at).toLocaleDateString() },
+            {
+              label: "Joined",
+              value: new Date(user.created_at).toLocaleDateString(),
+            },
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-2">
               <span className="text-muted-foreground w-20">{label}</span>

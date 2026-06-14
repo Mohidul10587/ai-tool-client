@@ -69,12 +69,23 @@ export function ProfileSettingsView({ user, updateAction, updatePasswordAction }
       <h2 className="text-xl font-semibold">Profile Settings</h2>
 
       <Card>
-        <CardHeader><CardTitle>Display Name</CardTitle></CardHeader>
+        <CardContent className="pt-6 flex flex-col sm:flex-row items-center gap-6">
+          <AvatarUpload userId={user.id} currentUrl={user.user_metadata?.avatar_url} initials={getInitials(name)} />
+          <div className="space-y-1 text-center sm:text-left">
+            <p className="font-semibold text-base">{name}</p>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <Badge variant="secondary" className="capitalize">{user.user_metadata?.role ?? "user"}</Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Edit Profile</CardTitle></CardHeader>
         <CardContent>
           <SettingsForm
             action={updateAction}
             fields={[{ name: "name", label: "Full Name", defaultValue: name }]}
-            submitLabel="Update Name"
+            submitLabel="Save Changes"
           />
         </CardContent>
       </Card>
@@ -90,6 +101,22 @@ export function ProfileSettingsView({ user, updateAction, updatePasswordAction }
             ]}
             submitLabel="Update Password"
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Account Info</CardTitle></CardHeader>
+        <CardContent className="text-sm space-y-2">
+          {[
+            { label: "Email", value: user.email },
+            { label: "Joined", value: new Date(user.created_at).toLocaleDateString() },
+            { label: "Last Sign In", value: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : "—" },
+          ].map(({ label, value }) => (
+            <div key={label} className="flex gap-2">
+              <span className="text-muted-foreground w-24 shrink-0">{label}</span>
+              <span className="font-medium break-all">{value}</span>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>
