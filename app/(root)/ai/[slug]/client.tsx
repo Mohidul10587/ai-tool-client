@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ExternalLink,
   Sparkles,
@@ -18,6 +18,7 @@ import Footer from "@/components/footer";
 import { VoteButton } from "./vote-button";
 import { PricingCard, ToolInfoCard } from "./tool-sidebar-cards";
 import type { ToolDetailsClientProps } from "./types";
+import { recordView } from "@/lib/recently-viewed";
 
 const FEATURE_ICONS = [
   <Sparkles className="h-5 w-5" />,
@@ -43,6 +44,17 @@ export function ToolDetailsClient({
   const cons = tool.cons ?? [];
   const qaItems = tool.qa_items ?? [];
   console.log("qaItems", qaItems);
+
+  useEffect(() => {
+    recordView({
+      id: tool.id,
+      name: tool.name,
+      slug: tool.slug,
+      logo_url: tool.logo_url,
+      pricing: tool.pricing,
+      subcategory_snapshot: tool.subcategory_snapshot,
+    });
+  }, [tool.id]);
   const voteProps = {
     toolId: tool.id,
     initialUpvotes,

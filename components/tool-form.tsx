@@ -185,8 +185,12 @@ export function ToolForm({ initialData, onSuccess, editMode, saving: externalSav
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent, status: "published" | "pending" = "published") {
     e.preventDefault();
+    await submitForm(status);
+  }
+
+  async function submitForm(status: "published" | "pending") {
     setInternalSaving(true);
     setInternalError(null);
     try {
@@ -198,7 +202,7 @@ export function ToolForm({ initialData, onSuccess, editMode, saving: externalSav
       const res = await fetch("/api/admin/add-tool", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...buildOverrides(), logo_url, hero_image_url, status: "published" }),
+        body: JSON.stringify({ ...buildOverrides(), logo_url, hero_image_url, status }),
       });
       if (!res.ok) { const j = await res.json(); throw new Error(j.error || "Failed"); }
       if (onSuccess) onSuccess();
@@ -400,11 +404,14 @@ export function ToolForm({ initialData, onSuccess, editMode, saving: externalSav
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-4xl">
+    <form onSubmit={(e) => handleSubmit(e, "published")} className="space-y-4 max-w-4xl">
       {formBody}
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Add & Publish"}</Button>
-        <Button type="button" variant="outline" onClick={() => router.push("/admin/tool-submissions")}>Cancel</Button>
+        <Button type="button" variant="outline" disabled={saving} onClick={() => submitForm("pending")}>
+          {saving ? "Saving…" : "Save as Draft"}
+        </Button>
+        <Button type="button" variant="ghost" onClick={() => router.push("/admin/tool-submissions")}>Cancel</Button>
       </div>
     </form>
   );

@@ -2,23 +2,17 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { unstable_noStore as noStore } from "next/cache";
+import { RecentlyViewed } from "@/components/recently-viewed";
 
 export default async function DashboardPage() {
   noStore();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  console.log(user.user_metadata);
+
   const name: string = user.user_metadata?.name ?? "User";
   const avatarUrl: string | undefined = user.user_metadata?.avatar_url;
-  const initials = name
-    .split(" ")
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -39,10 +33,7 @@ export default async function DashboardPage() {
         <CardContent className="space-y-2 text-sm">
           {[
             { label: "Name", value: name },
-            {
-              label: "Joined",
-              value: new Date(user.created_at).toLocaleDateString(),
-            },
+            { label: "Joined", value: new Date(user.created_at).toLocaleDateString() },
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-2">
               <span className="text-muted-foreground w-20">{label}</span>
@@ -52,11 +43,10 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[
           { label: "Saved Tools", value: "0" },
           { label: "Reviews", value: "0" },
-          { label: "Bookmarks", value: "0" },
         ].map((stat) => (
           <Card key={stat.label}>
             <CardContent className="pt-6 text-center">
@@ -66,6 +56,8 @@ export default async function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      <RecentlyViewed />
     </div>
   );
 }
